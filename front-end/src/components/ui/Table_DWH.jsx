@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import { PopoverLocal } from "./ui_local/popover_local";
 import { extractDistinctValues } from "@/utils/functions";
 import { Card, CardContent } from "./card";
+import { toast } from "sonner";
 
 export default function TableDWH() {
   const [metaData, setMetaData] = useState({});
@@ -26,6 +27,10 @@ export default function TableDWH() {
   const [dmhValues, setDMHValues] = useState("None");
   const [dkhValues, setDKHValues] = useState("None");
   const [isLoading, setIsLoading] = useState(false);
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'ascending'
+  });
 
   const [filterOptions, setFilterOptions] = useState({
     month: [],
@@ -85,8 +90,35 @@ export default function TableDWH() {
         city: [],
         state: [],
       });
+
+      toast.success("Dữ liệu đã được cập nhật thành công!", {
+        description: `Đã tải ${cleanDataTmp.length} bản ghi`,
+        duration: 3000,
+        position: "top-right",
+        style: {
+          background: "linear-gradient(to right, #10B981, #059669)",
+          color: "white",
+          border: "none",
+          borderRadius: "0.5rem",
+          padding: "1rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        },
+      });
     } catch (error) {
       console.error("Error fetching data:", error);
+      toast.error("Không thể tải dữ liệu!", {
+        description: "Vui lòng kiểm tra kết nối và thử lại",
+        duration: 3000,
+        position: "top-right",
+        style: {
+          background: "linear-gradient(to right, #EF4444, #DC2626)",
+          color: "white",
+          border: "none",
+          borderRadius: "0.5rem",
+          padding: "1rem",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -136,6 +168,28 @@ export default function TableDWH() {
     });
     setDisplayData(filteredData);
   }, [filterSelection]);
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+
+    const sortedData = [...displayData].sort((a, b) => {
+      const aValue = a[key];
+      const bValue = b[key];
+      
+      if (direction === 'ascending') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
+
+    setDisplayData(sortedData);
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] p-6 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Control Panel */}
@@ -143,7 +197,7 @@ export default function TableDWH() {
         <div className="flex flex-col md:flex-row gap-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Dim_Time</label>
+              <label className="text-sm font-medium text-gray-700">Thời Gian (Dim)</label>
               <SelectLocal
                 placeholder="DIM_ThoiGian"
                 arrayValues={[
@@ -157,11 +211,11 @@ export default function TableDWH() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Dim_Item</label>
+              <label className="text-sm font-medium text-gray-700">Mặt Hàng (Dim)</label>
               <SelectLocal
                 placeholder="Dim_Item"
                 arrayValues={[
-                  { label: "Item Id", value: "Item_Id" },
+                  { label: "Mã Mặt Hàng", value: "Item_Id" },
                   { label: "None", value: "None" },
                 ]}
                 onChange={setDMHValues}
@@ -169,13 +223,13 @@ export default function TableDWH() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Dim_Customer</label>
+              <label className="text-sm font-medium text-gray-700">Khách Hàng</label>
               <SelectLocal
                 placeholder="Dim_Customer"
                 arrayValues={[
-                  { label: "Customer", value: "Customer_Id" },
-                  { label: "City", value: "City_id" },
-                  { label: "State", value: "State" },
+                  { label: "Khách Hàng", value: "Customer_Id" },
+                  { label: "Thành Phố", value: "City_id" },
+                  { label: "Bang", value: "State" },
                   { label: "None", value: "None" },
                 ]}
                 onChange={setDKHValues}
@@ -192,12 +246,42 @@ export default function TableDWH() {
                   dkhValues === "None") ||
                 isLoading
               }
-              className="min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              className="relative min-w-[140px] h-12 overflow-hidden group"
             >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Xác nhận
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
+              
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              
+              {/* Border gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 rounded-lg p-[1px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-lg" />
+              </div>
+              
+              {/* Content */}
+              <div className="relative flex items-center justify-center gap-2 px-6 py-3">
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium tracking-wide">Confirm</span>
+                    <svg 
+                      className="w-4 h-4 text-white transform group-hover:translate-x-1 transition-transform duration-300" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M13 7l5 5m0 0l-5 5m5-5H6" 
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </Button>
           </div>
         </div>
@@ -278,7 +362,7 @@ export default function TableDWH() {
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
                     <div className="flex items-center gap-2">
-                      <span>State</span>
+                      <span>Bang</span>
                       <PopoverLocal
                         optionArray={filterOptions.state}
                         filterKey={"state"}
@@ -287,9 +371,69 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">Số lượng</TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">Tổng doanh thu</TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">Số lượng bản ghi</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200 text-right">
+                    <div className="flex items-center justify-end gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
+                      <span>Số lượng</span>
+                      <div className="flex flex-col">
+                        <svg 
+                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                            sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'ascending' 
+                              ? 'text-blue-500 transform -translate-y-0.5' 
+                              : 'group-hover:text-gray-500'
+                          }`} 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                        <svg 
+                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                            sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'descending' 
+                              ? 'text-blue-500 transform translate-y-0.5' 
+                              : 'group-hover:text-gray-500'
+                          }`} 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200 text-right">
+                    <div className="flex items-center justify-end gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
+                      <span>Tổng doanh thu</span>
+                      <div className="flex flex-col">
+                        <svg 
+                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                            sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'ascending' 
+                              ? 'text-blue-500 transform -translate-y-0.5' 
+                              : 'group-hover:text-gray-500'
+                          }`} 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                        <svg 
+                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                            sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'descending' 
+                              ? 'text-blue-500 transform translate-y-0.5' 
+                              : 'group-hover:text-gray-500'
+                          }`} 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200 text-right">Số lượng bản ghi</TableHead>
                 </TableRow>
               </TableHeader>
               {displayData && displayData.length > 0 && totalQuantity && totalRevenue ? (
@@ -297,7 +441,7 @@ export default function TableDWH() {
                   {/* Summary Row */}
                   <TableRow className="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold sticky top-[48px] bg-white/95 backdrop-blur-sm z-10">
                     <TableCell colSpan={7} className="text-right py-4 border-b border-blue-200">Tổng cộng:</TableCell>
-                    <TableCell className="font-medium py-4 border-b border-blue-200 bg-blue-50/50">
+                    <TableCell className="font-medium py-4 border-b border-blue-200 bg-blue-50/50 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <span className="text-blue-700">{totalQuantity.toLocaleString()}</span>
                         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,7 +449,7 @@ export default function TableDWH() {
                         </svg>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium py-4 border-b border-blue-200 bg-green-50/50">
+                    <TableCell className="font-medium py-4 border-b border-blue-200 bg-green-50/50 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <span className="text-green-700">{totalRevenue.toLocaleString('vi-VN')} VND</span>
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,7 +457,7 @@ export default function TableDWH() {
                         </svg>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium py-4 border-b border-blue-200">{displayData.length.toLocaleString()}</TableCell>
+                    <TableCell className="font-medium py-4 border-b border-blue-200 text-right">{displayData.length.toLocaleString()}</TableCell>
                   </TableRow>
                   
                   {/* Data Rows */}
@@ -349,7 +493,7 @@ export default function TableDWH() {
                           </svg>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3"></TableCell>
+                      <TableCell className="py-3 text-right"></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -446,32 +446,6 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-
-              {/* Hiệu quả bán hàng */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
-                <div className="flex items-center mb-3">
-                  <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
-                  <h3 className="font-semibold text-purple-700">Biểu đồ hiệu quả bán hàng</h3>
-                </div>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>• <span className="font-medium">Mục đích:</span> Phân tích mối quan hệ giữa số lượng và giá trị</p>
-                  <p>• <span className="font-medium">Cách đọc:</span> 
-                    <ul className="list-disc pl-4 mt-1">
-                      <li>Cột xanh: Doanh thu trung bình</li>
-                      <li>Đường xanh lá: Số lượng bán</li>
-                      <li>Trục trái: Giá trị (VND)</li>
-                      <li>Trục phải: Số lượng</li>
-                    </ul>
-                  </p>
-                  <p>• <span className="font-medium">Phân tích:</span> 
-                    <ul className="list-disc pl-4 mt-1">
-                      <li>Tháng có hiệu quả bán hàng tốt nhất</li>
-                      <li>Cân đối giữa số lượng và giá trị</li>
-                      <li>Chiến lược tối ưu hóa lợi nhuận</li>
-                    </ul>
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -536,40 +510,42 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-700">
-              Biểu đồ doanh thu theo tháng
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px]">
-              <RevenueChart 
-                data={data}
-                onChartClick={handleChartClick}
-                totalRevenue={totalRevenue}
-              />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Biểu đồ doanh thu theo tháng
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <RevenueChart 
+                  data={data}
+                  onChartClick={handleChartClick}
+                  totalRevenue={totalRevenue}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-700">
-              Biểu đồ số lượng theo tháng
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px]">
-              <QuantityChart 
-                data={data}
-                onChartClick={handleChartClick}
-                totalQuantity={totalQuantity}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Biểu đồ số lượng theo tháng
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <QuantityChart 
+                  data={data}
+                  onChartClick={handleChartClick}
+                  totalQuantity={totalQuantity}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
           <CardHeader>
@@ -580,22 +556,6 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-[400px]">
               <AvgRevenueChart 
-                data={data}
-                onChartClick={handleChartClick}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-700">
-              Hiệu quả bán hàng theo tháng
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px]">
-              <EfficiencyChart 
                 data={data}
                 onChartClick={handleChartClick}
               />

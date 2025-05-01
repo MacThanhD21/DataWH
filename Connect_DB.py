@@ -92,11 +92,11 @@ def generate_fact_sale(n, customer_df, item_df, time_df):
     
     return pd.DataFrame(data)
 
-# Realistic Data Generation Configuration
-num_cities = 30              # 30 representative offices/cities (typical for a medium-sized regional business)
-num_customers = 5000         # 5,000 customers (mix of retail and business customers)
-num_items = 100             # 1,000 active products (realistic SKU count for most businesses)
-num_fact_records = 2000    # 100,000 sales transactions (maintaining your requirement)
+num_cities = 10
+num_customers = 200
+num_items = 40
+num_fact_records = 1000
+
 
 # Generate dimension data
 dim_office_df = generate_dim_representative_office(num_cities)
