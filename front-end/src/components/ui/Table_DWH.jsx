@@ -193,11 +193,28 @@ export default function TableDWH() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] p-6 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Control Panel */}
-      <Card className="p-6 bg-white/80 backdrop-blur-sm shadow-lg border-0">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Thời Gian (Dim)</label>
+      <Card className="p-4 bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm shadow-lg border-0">
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+              <h2 className="text-sm font-semibold text-gray-700">Bộ lọc dữ liệu</h2>
+            </div>
+          </div>
+
+          {/* Filters Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Thời Gian */}
+            <div className="group">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="p-1 rounded-md bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <label className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Thời Gian</label>
+              </div>
               <SelectLocal
                 placeholder="DIM_ThoiGian"
                 arrayValues={[
@@ -208,10 +225,20 @@ export default function TableDWH() {
                 ]}
                 onChange={setDTGValues}
                 defaultValue={dtgValues}
+                className="w-full text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Mặt Hàng (Dim)</label>
+
+            {/* Mặt Hàng */}
+            <div className="group">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="p-1 rounded-md bg-purple-50 group-hover:bg-purple-100 transition-colors">
+                  <svg className="w-3.5 h-3.5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+                <label className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Mặt Hàng</label>
+              </div>
               <SelectLocal
                 placeholder="Dim_Item"
                 arrayValues={[
@@ -220,24 +247,37 @@ export default function TableDWH() {
                 ]}
                 onChange={setDMHValues}
                 defaultValue={dmhValues}
+                className="w-full text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Khách Hàng</label>
+
+            {/* Khách Hàng */}
+            <div className="group">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="p-1 rounded-md bg-green-50 group-hover:bg-green-100 transition-colors">
+                  <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <label className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Khách Hàng</label>
+              </div>
               <SelectLocal
                 placeholder="Dim_Customer"
                 arrayValues={[
                   { label: "Khách Hàng", value: "Customer_Id" },
-                  { label: "Thành Phố", value: "City_id" },
+                  { label: "Thành Phố", value: "City_Id" },
                   { label: "Bang", value: "State" },
                   { label: "None", value: "None" },
                 ]}
                 onChange={setDKHValues}
                 defaultValue={dkhValues}
+                className="w-full text-sm"
               />
             </div>
           </div>
-          <div className="flex items-end justify-end">
+
+          {/* Action Button */}
+          <div className="flex justify-end">
             <Button
               onClick={handleGetData}
               disabled={
@@ -246,7 +286,7 @@ export default function TableDWH() {
                   dkhValues === "None") ||
                 isLoading
               }
-              className="relative min-w-[140px] h-12 overflow-hidden group"
+              className="relative min-w-[120px] h-9 overflow-hidden group"
             >
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
@@ -255,19 +295,19 @@ export default function TableDWH() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
               
               {/* Border gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 rounded-lg p-[1px]">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-lg" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 rounded-md p-[1px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-md" />
               </div>
               
               {/* Content */}
-              <div className="relative flex items-center justify-center gap-2 px-6 py-3">
+              <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
                 {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-medium tracking-wide">Confirm</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-white font-medium">Xác nhận</span>
                     <svg 
-                      className="w-4 h-4 text-white transform group-hover:translate-x-1 transition-transform duration-300" 
+                      className="w-3.5 h-3.5 text-white transform group-hover:translate-x-0.5 transition-transform duration-300" 
                       fill="none" 
                       viewBox="0 0 24 24" 
                       stroke="currentColor"
@@ -288,14 +328,14 @@ export default function TableDWH() {
       </Card>
 
       {/* Data Table */}
-      <Card className="flex-1 overflow-hidden bg-white/80 backdrop-blur-sm shadow-lg border-0">
+      <Card className="flex-1 overflow-hidden bg-white/90 backdrop-blur-sm shadow-lg border-0">
         <div className="h-full flex flex-col">
           <div className="overflow-auto flex-1 custom-scrollbar">
             <Table className="min-w-[1024px]">
               <TableHeader className="sticky top-0 bg-white/95 backdrop-blur-sm z-10">
                 <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-300">
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Tháng</span>
                       <PopoverLocal
                         optionArray={filterOptions.month}
@@ -305,8 +345,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Quý</span>
                       <PopoverLocal
                         optionArray={filterOptions.quarter}
@@ -316,8 +356,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Năm</span>
                       <PopoverLocal
                         optionArray={filterOptions.year}
@@ -327,8 +367,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Mã mặt hàng</span>
                       <PopoverLocal
                         optionArray={filterOptions.product}
@@ -338,8 +378,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Khách hàng</span>
                       <PopoverLocal
                         optionArray={filterOptions.customer}
@@ -349,8 +389,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Thành phố</span>
                       <PopoverLocal
                         optionArray={filterOptions.city}
@@ -360,8 +400,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Bang</span>
                       <PopoverLocal
                         optionArray={filterOptions.state}
@@ -371,8 +411,8 @@ export default function TableDWH() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200 text-right">
-                    <div className="flex items-center justify-end gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
                       <span>Số lượng</span>
                       <div className="flex flex-col">
                         <svg 
@@ -402,8 +442,8 @@ export default function TableDWH() {
                       </div>
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200 text-right">
-                    <div className="flex items-center justify-end gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
+                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+                    <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
                       <span>Tổng doanh thu</span>
                       <div className="flex flex-col">
                         <svg 
@@ -433,31 +473,31 @@ export default function TableDWH() {
                       </div>
                     </div>
                   </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-b border-gray-200 text-right">Số lượng bản ghi</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4 text-center">Số lượng bản ghi</TableHead>
                 </TableRow>
               </TableHeader>
               {displayData && displayData.length > 0 && totalQuantity && totalRevenue ? (
                 <TableBody>
                   {/* Summary Row */}
                   <TableRow className="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold sticky top-[48px] bg-white/95 backdrop-blur-sm z-10">
-                    <TableCell colSpan={7} className="text-right py-4 border-b border-blue-200">Tổng cộng:</TableCell>
-                    <TableCell className="font-medium py-4 border-b border-blue-200 bg-blue-50/50 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <TableCell colSpan={7} className="text-center py-4 border-r border-blue-200">Tổng cộng:</TableCell>
+                    <TableCell className="font-medium py-4 border-r border-blue-200 bg-blue-50/50 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <span className="text-blue-700">{totalQuantity.toLocaleString()}</span>
                         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium py-4 border-b border-blue-200 bg-green-50/50 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <TableCell className="font-medium py-4 border-r border-blue-200 bg-green-50/50 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <span className="text-green-700">{totalRevenue.toLocaleString('vi-VN')} VND</span>
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium py-4 border-b border-blue-200 text-right">{displayData.length.toLocaleString()}</TableCell>
+                    <TableCell className="font-medium py-4 text-center">{displayData.length.toLocaleString()}</TableCell>
                   </TableRow>
                   
                   {/* Data Rows */}
@@ -466,15 +506,15 @@ export default function TableDWH() {
                       key={index} 
                       className="hover:bg-gray-50/80 transition-all duration-300 border-b border-gray-100"
                     >
-                      <TableCell className="py-3">{invoice["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3">{invoice["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3">{invoice["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3">{invoice["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3">{invoice["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3">{invoice["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3">{invoice["[Dim Customer].[State].[State].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 text-right font-medium group">
-                        <div className="flex items-center justify-end gap-2">
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[State].[State].[MEMBER_CAPTION]"]}</TableCell>
+                      <TableCell className="py-3 border-r border-gray-100 text-center font-medium group">
+                        <div className="flex items-center justify-center gap-2">
                           <span className="text-blue-600 group-hover:text-blue-700 transition-colors duration-200">
                             {invoice["[Measures].[Quantity]"].toLocaleString()}
                           </span>
@@ -483,8 +523,8 @@ export default function TableDWH() {
                           </svg>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 text-right font-medium group">
-                        <div className="flex items-center justify-end gap-2">
+                      <TableCell className="py-3 border-r border-gray-100 text-center font-medium group">
+                        <div className="flex items-center justify-center gap-2">
                           <span className="text-green-600 group-hover:text-green-700 transition-colors duration-200">
                             {invoice["[Measures].[Total Revenue]"].toLocaleString('vi-VN')} VND
                           </span>
@@ -493,7 +533,7 @@ export default function TableDWH() {
                           </svg>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 text-right"></TableCell>
+                      <TableCell className="py-3 text-center"></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
