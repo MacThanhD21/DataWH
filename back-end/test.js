@@ -25,7 +25,7 @@ const cubeRegistry = [
   },
   {
     dims: ["Dim Time", "Dim Item", "Dim Customer"],
-    cube: "3D_Time_Item_Customer",
+    cube: "3D_Time_Customer_Item",
   },
 ];
 

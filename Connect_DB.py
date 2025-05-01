@@ -96,13 +96,13 @@ def generate_fact_sale(n, customer_df, item_df, time_df):
 num_cities = 30              # 30 representative offices/cities (typical for a medium-sized regional business)
 num_customers = 5000         # 5,000 customers (mix of retail and business customers)
 num_items = 100             # 1,000 active products (realistic SKU count for most businesses)
-num_fact_records = 1000    # 100,000 sales transactions (maintaining your requirement)
+num_fact_records = 2000    # 100,000 sales transactions (maintaining your requirement)
 
 # Generate dimension data
 dim_office_df = generate_dim_representative_office(num_cities)
 dim_customer_df = generate_dim_customer(num_customers, dim_office_df['CityId'].tolist())
 dim_item_df = generate_dim_item(num_items)
-dim_time_df = generate_dim_time(2020, 2025)  # 6 years of data
+dim_time_df = generate_dim_time(2023, 2025)  # 6 years of data
 
 # Generate fact data
 fact_sale_df = generate_fact_sale(num_fact_records, dim_customer_df, dim_item_df, dim_time_df)
