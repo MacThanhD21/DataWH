@@ -63,17 +63,17 @@ const AvgRevenueChart = ({ data, onChartClick }) => {
       <div className="absolute right-4 top-4 z-10 flex gap-2">
         <button
           onClick={handleCopyChart}
-          className="h-8 w-8 hover:bg-gray-100 transition-colors border border-gray-200 rounded-md flex items-center justify-center bg-white shadow-sm"
+          className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600 rounded-md flex items-center justify-center bg-white dark:bg-gray-800 shadow-sm"
           title="Sao chép biểu đồ"
         >
-          <Copy className="h-4 w-4 text-gray-600" />
+          <Copy className="h-4 w-4 text-gray-600 dark:text-gray-300" />
         </button>
         <button
           onClick={handleExportChart}
-          className="h-8 w-8 hover:bg-gray-100 transition-colors border border-gray-200 rounded-md flex items-center justify-center bg-white shadow-sm"
+          className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600 rounded-md flex items-center justify-center bg-white dark:bg-gray-800 shadow-sm"
           title="Tải xuống biểu đồ"
         >
-          <Download className="h-4 w-4 text-gray-600" />
+          <Download className="h-4 w-4 text-gray-600 dark:text-gray-300" />
         </button>
       </div>
       <div ref={chartRef} className="h-[400px]">
@@ -82,14 +82,24 @@ const AvgRevenueChart = ({ data, onChartClick }) => {
             data={data}
             onClick={(data) => onChartClick(data.activePayload[0].payload, 'avgRevenue')}
           >
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis 
               dataKey="timeLabel"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: '#6B7280' }}
               interval="preserveStartEnd"
+              stroke="#6B7280"
             />
-            <YAxis />
+            <YAxis 
+              tick={{ fontSize: 12, fill: '#6B7280' }}
+              stroke="#6B7280"
+            />
             <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#ffffff',
+                border: '1px solid #E5E7EB',
+                borderRadius: '0.5rem',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+              }}
               formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu trung bình']}
               labelFormatter={(label) => label}
             />

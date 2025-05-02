@@ -7,8 +7,8 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "DWH Analytics",
-  description: "Hệ thống phân tích dữ liệu đơn hàng",
+  title: "Order System Analytics",
+  description: "Order System Analytics",
 };
 
 export default function RootLayout({ children }) {

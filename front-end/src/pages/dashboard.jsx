@@ -29,74 +29,6 @@ export default function Dashboard() {
   const revenueChartRef = useRef(null);
   const quantityChartRef = useRef(null);
 
-  const handleExportChart = async (chartRef, chartName) => {
-    try {
-      if (!chartRef.current) return;
-
-      const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2, // Tăng độ phân giải
-        logging: false,
-        useCORS: true
-      });
-
-      // Tạo tên file với ngày hiện tại
-      const currentDate = new Date().toISOString().split('T')[0];
-      const fileName = `${chartName}_${currentDate}.png`;
-
-      // Tạo link tải xuống
-      const link = document.createElement('a');
-      link.download = fileName;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-
-      toast.success("Xuất ảnh thành công!", {
-        description: `File ${fileName} đã được tải xuống`,
-        duration: 3000,
-        position: "top-right"
-      });
-    } catch (error) {
-      console.error("Lỗi khi xuất ảnh:", error);
-      toast.error("Xuất ảnh thất bại!", {
-        description: "Vui lòng thử lại",
-        duration: 3000,
-        position: "top-right"
-      });
-    }
-  };
-
-  const handleCopyChart = async (chartRef) => {
-    try {
-      if (!chartRef.current) return;
-
-      const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        useCORS: true
-      });
-
-      // Copy ảnh vào clipboard
-      canvas.toBlob((blob) => {
-        const item = new ClipboardItem({ 'image/png': blob });
-        navigator.clipboard.write([item]);
-      });
-
-      toast.success("Đã sao chép biểu đồ!", {
-        description: "Biểu đồ đã được sao chép vào clipboard",
-        duration: 3000,
-        position: "top-right"
-      });
-    } catch (error) {
-      console.error("Lỗi khi sao chép:", error);
-      toast.error("Sao chép thất bại!", {
-        description: "Vui lòng thử lại",
-        duration: 3000,
-        position: "top-right"
-      });
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -263,26 +195,10 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6">
         <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold text-gray-700">
               Biểu đồ doanh thu theo tháng
             </CardTitle>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => handleCopyChart(revenueChartRef)}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Sao chép biểu đồ"
-              >
-                <Copy className="h-4 w-4 text-gray-600" />
-              </Button>
-              <Button
-                onClick={() => handleExportChart(revenueChartRef, "BieuDoDoanhThu")}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Tải xuống biểu đồ"
-              >
-                <Download className="h-4 w-4 text-gray-600" />
-              </Button>
-            </div>
           </CardHeader>
           <CardContent>
             <div className="h-[400px]" ref={revenueChartRef}>
@@ -311,26 +227,10 @@ export default function Dashboard() {
         </Card>
 
         <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold text-gray-700">
               Biểu đồ số lượng theo tháng
             </CardTitle>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => handleCopyChart(quantityChartRef)}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Sao chép biểu đồ"
-              >
-                <Copy className="h-4 w-4 text-gray-600" />
-              </Button>
-              <Button
-                onClick={() => handleExportChart(quantityChartRef, "BieuDoSoLuong")}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                title="Tải xuống biểu đồ"
-              >
-                <Download className="h-4 w-4 text-gray-600" />
-              </Button>
-            </div>
           </CardHeader>
           <CardContent>
             <div className="h-[400px]" ref={quantityChartRef}>

@@ -20,7 +20,7 @@ const Header = () => {
                 <FaChartLine className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
-                DWH Analytics
+                Order System Analytics
               </span>
             </Link>
             
