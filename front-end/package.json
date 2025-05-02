@@ -9,12 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-popover": "^1.1.11",
     "@radix-ui/react-select": "^2.2.2",
-    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-slot": "^1.2.0",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.479.0",
     "my-next-app": "file:",
     "next": "^14.2.24",
@@ -25,8 +28,9 @@
     "recharts": "^2.15.3",
     "sonner": "^2.0.3",
     "styled-components": "^6.1.17",
-    "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwind-merge": "^3.2.0",
+    "tailwindcss-animate": "^1.0.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^8",

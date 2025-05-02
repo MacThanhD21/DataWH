@@ -13,11 +13,12 @@ import { SelectLocal } from "./ui_local/select_local";
 import { Button } from "./button";
 import { use, useEffect, useState } from "react";
 import axiosInstance from "@/config/axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import { PopoverLocal } from "./ui_local/popover_local";
 import { extractDistinctValues } from "@/utils/functions";
 import { Card, CardContent } from "./card";
 import { toast } from "sonner";
+import * as XLSX from 'xlsx';
 
 export default function TableDWH() {
   const [metaData, setMetaData] = useState({});
@@ -190,6 +191,79 @@ export default function TableDWH() {
     setDisplayData(sortedData);
   };
 
+  const handleExportExcel = () => {
+    try {
+      // Tạo workbook mới
+      const wb = XLSX.utils.book_new();
+      
+      // Chuẩn bị dữ liệu cho Excel
+      const excelData = displayData.map(item => ({
+        'Tháng': item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"],
+        'Quý': item["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"],
+        'Năm': item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"],
+        'Mã mặt hàng': item["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"],
+        'Khách hàng': item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"],
+        'Thành phố': item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"],
+        'Bang': item["[Dim Customer].[State].[State].[MEMBER_CAPTION]"],
+        'Số lượng': item["[Measures].[Quantity]"],
+        'Tổng doanh thu': item["[Measures].[Total Revenue]"]
+      }));
+
+      // Thêm dòng tổng cộng
+      excelData.push({
+        'Tháng': 'Tổng cộng',
+        'Quý': '',
+        'Năm': '',
+        'Mã mặt hàng': '',
+        'Khách hàng': '',
+        'Thành phố': '',
+        'Bang': '',
+        'Số lượng': totalQuantity,
+        'Tổng doanh thu': totalRevenue
+      });
+
+      // Tạo worksheet từ dữ liệu
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Định dạng cột
+      const wscols = [
+        {wch: 10}, // Tháng
+        {wch: 10}, // Quý
+        {wch: 10}, // Năm
+        {wch: 15}, // Mã mặt hàng
+        {wch: 20}, // Khách hàng
+        {wch: 15}, // Thành phố
+        {wch: 15}, // Bang
+        {wch: 15}, // Số lượng
+        {wch: 20}  // Tổng doanh thu
+      ];
+      ws['!cols'] = wscols;
+
+      // Thêm worksheet vào workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Báo cáo");
+
+      // Tạo tên file với ngày hiện tại
+      const currentDate = new Date().toISOString().split('T')[0];
+      const fileName = `BaoCaoDoanhThu_${currentDate}.xlsx`;
+
+      // Xuất file
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Xuất Excel thành công!", {
+        description: `File ${fileName} đã được tải xuống`,
+        duration: 3000,
+        position: "top-right"
+      });
+    } catch (error) {
+      console.error("Lỗi khi xuất Excel:", error);
+      toast.error("Xuất Excel thất bại!", {
+        description: "Vui lòng thử lại",
+        duration: 3000,
+        position: "top-right"
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] p-6 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Control Panel */}
@@ -201,6 +275,28 @@ export default function TableDWH() {
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
               <h2 className="text-sm font-semibold text-gray-700">Bộ lọc dữ liệu</h2>
             </div>
+            <Button
+              onClick={handleExportExcel}
+              className="relative min-w-[120px] h-9 overflow-hidden group"
+              disabled={!displayData || displayData.length === 0}
+            >
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
+              
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              
+              {/* Border gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 rounded-md p-[1px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-md" />
+              </div>
+              
+              {/* Content */}
+              <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
+                <Download className="h-4 w-4 text-white" />
+                <span className="text-sm text-white font-medium">Xuất Excel</span>
+              </div>
+            </Button>
           </div>
 
           {/* Filters Grid */}

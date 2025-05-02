@@ -91,71 +91,95 @@ export default function DashboardPage() {
   }, []);
 
   const processData = useCallback((rawData) => {
-    const cleanData = Array.from(
-      new Set(rawData.map((item) => JSON.stringify(item)))
-    ).map((str) => JSON.parse(str));
+    if (!rawData || !Array.isArray(rawData)) {
+      console.error('Invalid data format:', rawData);
+      return {
+        chartData: [],
+        totalQty: 0,
+        totalRev: 0,
+        customerCount: 0,
+        cityCount: 0,
+        revenueGrowth: 0,
+        quantityGrowth: 0,
+        timeRangeText: 'Không có dữ liệu'
+      };
+    }
+
+    // Clean and validate data
+    const cleanData = rawData
+      .filter(item => item && typeof item === 'object')
+      .map(item => ({
+        month: Number(item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"] || 0),
+        year: Number(item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"] || 0),
+        quantity: Number(item["[Measures].[Quantity]"] || 0),
+        revenue: Number(item["[Measures].[Total Revenue]"] || 0),
+        customerId: item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"],
+        cityId: item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"]
+      }))
+      .filter(item => !isNaN(item.month) && !isNaN(item.year));
+
+    if (cleanData.length === 0) {
+      console.error('No valid data after cleaning');
+      return {
+        chartData: [],
+        totalQty: 0,
+        totalRev: 0,
+        customerCount: 0,
+        cityCount: 0,
+        revenueGrowth: 0,
+        quantityGrowth: 0,
+        timeRangeText: 'Không có dữ liệu'
+      };
+    }
 
     // Calculate totals
-    const totalQty = cleanData.reduce(
-      (acc, item) => acc + item["[Measures].[Quantity]"],
-      0
-    );
-    const totalRev = cleanData.reduce(
-      (acc, item) => acc + item["[Measures].[Total Revenue]"],
-      0
-    );
+    const totalQty = cleanData.reduce((acc, item) => acc + item.quantity, 0);
+    const totalRev = cleanData.reduce((acc, item) => acc + item.revenue, 0);
 
     // Calculate unique counts
-    const uniqueCustomers = new Set(
-      cleanData.map(item => item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"])
-    );
-    const uniqueCities = new Set(
-      cleanData.map(item => item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"])
-    );
+    const uniqueCustomers = new Set(cleanData.map(item => item.customerId).filter(Boolean));
+    const uniqueCities = new Set(cleanData.map(item => item.cityId).filter(Boolean));
+
+    // Sort data by time
+    const sortedData = [...cleanData].sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.month - b.month;
+    });
 
     // Calculate growth
-    const sortedData = [...cleanData].sort((a, b) => 
-      a["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"] - b["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"]
-    );
-    
     const midPoint = Math.floor(sortedData.length / 2);
     const firstHalf = sortedData.slice(0, midPoint);
     const secondHalf = sortedData.slice(midPoint);
     
-    const firstHalfRevenue = firstHalf.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0);
-    const secondHalfRevenue = secondHalf.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0);
-    const firstHalfQuantity = firstHalf.reduce((acc, item) => acc + item["[Measures].[Quantity]"], 0);
-    const secondHalfQuantity = secondHalf.reduce((acc, item) => acc + item["[Measures].[Quantity]"], 0);
+    const firstHalfRevenue = firstHalf.reduce((acc, item) => acc + item.revenue, 0);
+    const secondHalfRevenue = secondHalf.reduce((acc, item) => acc + item.revenue, 0);
+    const firstHalfQuantity = firstHalf.reduce((acc, item) => acc + item.quantity, 0);
+    const secondHalfQuantity = secondHalf.reduce((acc, item) => acc + item.quantity, 0);
     
-    const revenueGrowth = Math.round(((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100);
-    const quantityGrowth = Math.round(((secondHalfQuantity - firstHalfQuantity) / firstHalfQuantity) * 100);
+    const revenueGrowth = firstHalfRevenue > 0 
+      ? Math.round(((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100) 
+      : 0;
+    const quantityGrowth = firstHalfQuantity > 0 
+      ? Math.round(((secondHalfQuantity - firstHalfQuantity) / firstHalfQuantity) * 100) 
+      : 0;
 
     // Get time range
-    const years = new Set(cleanData.map(item => item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"]));
+    const years = new Set(sortedData.map(item => item.year));
     const yearList = Array.from(years).sort();
     const timeRangeText = yearList.length > 1 
-      ? `Từ ${getMonthName(firstHalf[0]["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"])}/${yearList[0]} đến ${getMonthName(secondHalf[secondHalf.length - 1]["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"])}/${yearList[yearList.length - 1]}`
+      ? `Từ ${getMonthName(sortedData[0].month)}/${yearList[0]} đến ${getMonthName(sortedData[sortedData.length - 1].month)}/${yearList[yearList.length - 1]}`
       : `Năm ${yearList[0]}`;
 
-    // Prepare chart data with correct average revenue calculation
-    const chartData = cleanData.map((item) => {
-      const revenue = item["[Measures].[Total Revenue]"];
-      const quantity = item["[Measures].[Quantity]"];
-      const avgRevenue = quantity > 0 ? Math.round(revenue / quantity) : 0;
-
-      return {
-        month: item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"],
-        year: item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"],
-        monthName: getMonthName(item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"]),
-        timeLabel: formatTime(
-          item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"],
-          item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"]
-        ),
-        quantity: quantity,
-        revenue: revenue,
-        avgRevenue: avgRevenue,
-      };
-    });
+    // Prepare chart data
+    const chartData = sortedData.map(item => ({
+      month: item.month,
+      year: item.year,
+      monthName: getMonthName(item.month),
+      timeLabel: formatTime(item.month, item.year),
+      quantity: item.quantity,
+      revenue: item.revenue,
+      avgRevenue: item.quantity > 0 ? Math.round(item.revenue / item.quantity) : 0
+    }));
 
     return {
       chartData,
@@ -178,6 +202,12 @@ export default function DashboardPage() {
     if (!selectedData || !showDetail) return null;
 
     const getDetailContent = () => {
+      if (!selectedData) return null;
+
+      const { revenue = 0, quantity = 0, timeLabel = '' } = selectedData;
+      const avgRevenue = quantity > 0 ? Math.round(revenue / quantity) : 0;
+      const percentage = totalQuantity > 0 ? Math.round((quantity / totalQuantity) * 100) : 0;
+
       switch (selectedData.chartType) {
         case 'revenue':
           return (
@@ -185,19 +215,19 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Doanh thu:</span>
                 <span className="font-semibold text-green-600">
-                  {selectedData.revenue.toLocaleString('vi-VN')} VND
+                  {revenue.toLocaleString('vi-VN')} VND
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Số lượng:</span>
                 <span className="font-semibold text-blue-600">
-                  {selectedData.quantity.toLocaleString()}
+                  {quantity.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Doanh thu trung bình:</span>
                 <span className="font-semibold text-yellow-600">
-                  {selectedData.avgRevenue.toLocaleString('vi-VN')} VND
+                  {avgRevenue.toLocaleString('vi-VN')} VND
                 </span>
               </div>
             </div>
@@ -208,19 +238,19 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Số lượng:</span>
                 <span className="font-semibold text-blue-600">
-                  {selectedData.quantity.toLocaleString()}
+                  {quantity.toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Doanh thu:</span>
                 <span className="font-semibold text-green-600">
-                  {selectedData.revenue.toLocaleString('vi-VN')} VND
+                  {revenue.toLocaleString('vi-VN')} VND
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Tỷ lệ so với tổng:</span>
                 <span className="font-semibold text-purple-600">
-                  {Math.round((selectedData.quantity / totalQuantity) * 100)}%
+                  {percentage}%
                 </span>
               </div>
             </div>
@@ -231,65 +261,19 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Doanh thu trung bình:</span>
                 <span className="font-semibold text-yellow-600">
-                  {selectedData.avgRevenue.toLocaleString('vi-VN')} VND
+                  {avgRevenue.toLocaleString('vi-VN')} VND
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Doanh thu:</span>
                 <span className="font-semibold text-green-600">
-                  {selectedData.revenue.toLocaleString('vi-VN')} VND
+                  {revenue.toLocaleString('vi-VN')} VND
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Số lượng:</span>
                 <span className="font-semibold text-blue-600">
-                  {selectedData.quantity.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          );
-        case 'distribution':
-          return (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Doanh thu:</span>
-                <span className="font-semibold text-green-600">
-                  {selectedData.revenue.toLocaleString('vi-VN')} VND
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Tỷ lệ so với tổng:</span>
-                <span className="font-semibold text-purple-600">
-                  {Math.round((selectedData.revenue / totalRevenue) * 100)}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Số lượng:</span>
-                <span className="font-semibold text-blue-600">
-                  {selectedData.quantity.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          );
-        case 'efficiency':
-          return (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Doanh thu trung bình:</span>
-                <span className="font-semibold text-blue-600">
-                  {selectedData.avgRevenue.toLocaleString('vi-VN')} VND
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Số lượng bán:</span>
-                <span className="font-semibold text-green-600">
-                  {selectedData.quantity.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Tổng doanh thu:</span>
-                <span className="font-semibold text-purple-600">
-                  {selectedData.revenue.toLocaleString('vi-VN')} VND
+                  {quantity.toLocaleString()}
                 </span>
               </div>
             </div>
