@@ -92,9 +92,9 @@ def generate_fact_sale(n, customer_df, item_df, time_df):
     
     return pd.DataFrame(data)
 
-num_cities = 10
-num_customers = 200
-num_items = 40
+num_cities = 20
+num_customers = 100
+num_items = 50
 num_fact_records = 1000
 
 
@@ -102,7 +102,7 @@ num_fact_records = 1000
 dim_office_df = generate_dim_representative_office(num_cities)
 dim_customer_df = generate_dim_customer(num_customers, dim_office_df['CityId'].tolist())
 dim_item_df = generate_dim_item(num_items)
-dim_time_df = generate_dim_time(2023, 2025)  # 6 years of data
+dim_time_df = generate_dim_time(2022, 2025)  # 6 years of data
 
 # Generate fact data
 fact_sale_df = generate_fact_sale(num_fact_records, dim_customer_df, dim_item_df, dim_time_df)

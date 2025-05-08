@@ -11,14 +11,18 @@ import {
 } from "@/components/ui/table";
 import { SelectLocal } from "./ui_local/select_local";
 import { Button } from "./button";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useMemo, useCallback } from "react";
 import axiosInstance from "@/config/axios";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Download, FileText } from "lucide-react";
 import { PopoverLocal } from "./ui_local/popover_local";
 import { extractDistinctValues } from "@/utils/functions";
 import { Card, CardContent } from "./card";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import Pagination from "./Pagination";
+import { useDataFetching } from '@/hooks/useDataFetching';
 
 export default function TableDWH() {
   const [metaData, setMetaData] = useState({});
@@ -28,11 +32,12 @@ export default function TableDWH() {
   const [dmhValues, setDMHValues] = useState("None");
   const [dkhValues, setDKHValues] = useState("None");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(100);
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 'ascending'
   });
-
   const [filterOptions, setFilterOptions] = useState({
     month: [],
     quarter: [],
@@ -43,6 +48,9 @@ export default function TableDWH() {
     state: [],
   });
 
+  const { data: fetchedData, isLoading: isDataLoading, fetchData } = useDataFetching();
+
+  // Memoize filter selection
   const [filterSelection, setFilterSelection] = useState({
     month: [],
     quarter: [],
@@ -53,35 +61,64 @@ export default function TableDWH() {
     state: [],
   });
 
-  const [totalQuantity, setTotalQuantity] = useState(0);
-  const [totalRevenue, setTotalRevenue] = useState(0);
+  // Memoize totals calculation
+  const { totalQuantity, totalRevenue } = useMemo(() => {
+    if (!displayData || displayData.length === 0) {
+      return { totalQuantity: 0, totalRevenue: 0 };
+    }
 
-  const handleGetData = async () => {
-    try {
-      setIsLoading(true);
-      const sendData = {
-        Dim_Time: dtgValues,
-        Dim_Item: dmhValues,
-        Dim_Customer: dkhValues,
-      };
-      const { data } = await axiosInstance.post("/api/cube", sendData);
-      console.log("Data received from server:", data);
-      setMetaData(data);
+    return {
+      totalQuantity: displayData.reduce(
+        (acc, invoice) => acc + invoice["[Measures].[Quantity]"],
+        0
+      ),
+      totalRevenue: displayData.reduce(
+        (acc, invoice) => acc + invoice["[Measures].[Total Revenue]"],
+        0
+      ),
+    };
+  }, [displayData]);
 
-      // dữ liệu liên quan tới DIM_KhachHang bị lặp, không hiểu sao
-      const cleanDataTmp = Array.from(
-        new Set(data.validData.map((item) => JSON.stringify(item)))
-      ).map((str) => JSON.parse(str));
+  // Memoize filtered data
+  const filteredData = useMemo(() => {
+    if (!cleanData) return [];
+    
+    const dimensionMap = {
+      month: "[Dim Time].[Month].[Month].[MEMBER_CAPTION]",
+      quarter: "[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]",
+      year: "[Dim Time].[Year].[Year].[MEMBER_CAPTION]",
+      product: "[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]",
+      customer: "[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]",
+      city: "[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]",
+      state: "[Dim Customer].[State].[State].[MEMBER_CAPTION]",
+    };
 
-      // const cleanDataTmp = [data.validData[1]];
-      // const cleanDataTmp = data.validData;
+    return cleanData.filter((item) => {
+      return Object.entries(filterSelection).every(([key, selectedValues]) => {
+        if (selectedValues.length === 0) return true;
+        const dimKey = dimensionMap[key];
+        const value = item[dimKey];
+        return selectedValues.includes(value);
+      });
+    });
+  }, [cleanData, filterSelection]);
+
+  // Memoize paginated data
+  const paginatedData = useMemo(() => {
+    if (!filteredData || filteredData.length === 0) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredData.slice(startIndex, endIndex);
+  }, [filteredData, currentPage, pageSize]);
+
+  // Optimize handleGetData
+  const handleGetData = useCallback(async () => {
+    const cleanDataTmp = await fetchData(dtgValues, dmhValues, dkhValues);
+    if (cleanDataTmp.length > 0) {
       setCleanData(cleanDataTmp);
       setDisplayData(cleanDataTmp);
-      console.log("Cleaned data:", cleanDataTmp);
-
       const distinctOptions = extractDistinctValues(cleanDataTmp);
       setFilterOptions(distinctOptions);
-
       setFilterSelection({
         month: [],
         quarter: [],
@@ -91,39 +128,25 @@ export default function TableDWH() {
         city: [],
         state: [],
       });
-
-      toast.success("Dữ liệu đã được cập nhật thành công!", {
-        description: `Đã tải ${cleanDataTmp.length} bản ghi`,
-        duration: 3000,
-        position: "top-right",
-        style: {
-          background: "linear-gradient(to right, #10B981, #059669)",
-          color: "white",
-          border: "none",
-          borderRadius: "0.5rem",
-          padding: "1rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-        },
-      });
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Không thể tải dữ liệu!", {
-        description: "Vui lòng kiểm tra kết nối và thử lại",
-        duration: 3000,
-        position: "top-right",
-        style: {
-          background: "linear-gradient(to right, #EF4444, #DC2626)",
-          color: "white",
-          border: "none",
-          borderRadius: "0.5rem",
-          padding: "1rem",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-        },
-      });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [fetchData, dtgValues, dmhValues, dkhValues]);
+
+  // Optimize handleSort
+  const handleSort = useCallback((key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+
+    const sortedData = [...displayData].sort((a, b) => {
+      const aValue = a[key];
+      const bValue = b[key];
+      return direction === 'ascending' ? aValue - bValue : bValue - aValue;
+    });
+
+    setDisplayData(sortedData);
+  }, [sortConfig, displayData]);
 
   useEffect(() => {
     handleGetData();
@@ -139,8 +162,6 @@ export default function TableDWH() {
         (acc, invoice) => acc + invoice["[Measures].[Total Revenue]"],
         0
       );
-      setTotalQuantity(totalQuantityTmp);
-      setTotalRevenue(totalRevenueTmp);
     }
   }, [displayData]);
 
@@ -170,26 +191,18 @@ export default function TableDWH() {
     setDisplayData(filteredData);
   }, [filterSelection]);
 
-  const handleSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
+  // Tính tổng số trang
+  const totalPages = Math.ceil((displayData?.length || 0) / pageSize);
 
-    const sortedData = [...displayData].sort((a, b) => {
-      const aValue = a[key];
-      const bValue = b[key];
-      
-      if (direction === 'ascending') {
-        return aValue - bValue;
-      } else {
-        return bValue - aValue;
-      }
-    });
-
-    setDisplayData(sortedData);
+  // Xử lý thay đổi trang
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
+
+  // Reset về trang 1 khi filter thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterSelection]);
 
   const handleExportExcel = () => {
     try {
@@ -264,6 +277,175 @@ export default function TableDWH() {
     }
   };
 
+  const handleExportPDF = async () => {
+    try {
+      if (!displayData || displayData.length === 0) {
+        toast.error("Không có dữ liệu để xuất!", {
+          description: "Vui lòng tải dữ liệu trước khi xuất PDF",
+          duration: 3000,
+          position: "top-right"
+        });
+        return;
+      }
+
+      // Tạo instance của jsPDF với cấu hình phù hợp
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+        putOnlyUsedFonts: true,
+        floatPrecision: 16
+      });
+
+      // Thêm logo hoặc hình ảnh (nếu có)
+      // doc.addImage(logoBase64, 'PNG', 14, 10, 30, 30);
+
+      // Thêm tiêu đề với font size lớn hơn và màu sắc
+      doc.setFontSize(24);
+      doc.setTextColor(41, 128, 185); // Màu xanh dương
+      doc.setFont('helvetica', 'bold');
+      doc.text('Báo Cáo Doanh Thu', doc.internal.pageSize.width / 2, 25, { align: 'center' });
+
+      // Thêm thông tin thời gian với font size nhỏ hơn
+      const currentDate = new Date().toLocaleDateString('vi-VN');
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100); // Màu xám
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Ngày xuất báo cáo: ${currentDate}`, doc.internal.pageSize.width / 2, 35, { align: 'center' });
+
+      // Thêm đường kẻ ngang
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, 40, doc.internal.pageSize.width - 14, 40);
+
+      // Chuẩn bị dữ liệu cho bảng
+      const tableData = displayData.map(item => {
+        try {
+          return [
+            item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"] || '',
+            item["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"] || '',
+            item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"] || '',
+            item["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"] || '',
+            item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"] || '',
+            item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"] || '',
+            item["[Dim Customer].[State].[State].[MEMBER_CAPTION]"] || '',
+            (item["[Measures].[Quantity]"] || 0).toLocaleString(),
+            (item["[Measures].[Total Revenue]"] || 0).toLocaleString('vi-VN') + ' VND'
+          ];
+        } catch (error) {
+          console.error("Lỗi khi xử lý dòng dữ liệu:", error);
+          return Array(9).fill('');
+        }
+      });
+
+      // Thêm dòng tổng cộng
+      tableData.push([
+        'Tổng cộng',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        totalQuantity.toLocaleString(),
+        totalRevenue.toLocaleString('vi-VN') + ' VND'
+      ]);
+
+      // Tạo bảng với định dạng đẹp
+      autoTable(doc, {
+        head: [['Tháng', 'Quý', 'Năm', 'Mã mặt hàng', 'Khách hàng', 'Thành phố', 'Bang', 'Số lượng', 'Tổng doanh thu']],
+        body: tableData,
+        startY: 45,
+        theme: 'grid',
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          overflow: 'linebreak',
+          font: 'helvetica',
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+          textColor: [50, 50, 50]
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center',
+          fontSize: 10,
+          lineWidth: 0.1,
+          cellPadding: 4
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+          0: { cellWidth: 15 },
+          1: { cellWidth: 15 },
+          2: { cellWidth: 15 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 25 },
+          6: { cellWidth: 20 },
+          7: { cellWidth: 20, halign: 'right' },
+          8: { cellWidth: 30, halign: 'right' }
+        },
+        footStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'right',
+          fontSize: 10,
+          cellPadding: 4
+        },
+        didDrawPage: function(data) {
+          // Thêm footer cho mỗi trang
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100);
+          doc.text(
+            `Trang ${data.pageNumber} / ${data.pageCount}`,
+            doc.internal.pageSize.width - 20,
+            doc.internal.pageSize.height - 10,
+            { align: 'right' }
+          );
+
+          // Thêm đường kẻ ngang ở footer
+          doc.setDrawColor(200, 200, 200);
+          doc.line(
+            14,
+            doc.internal.pageSize.height - 15,
+            doc.internal.pageSize.width - 14,
+            doc.internal.pageSize.height - 15
+          );
+        },
+        margin: { top: 45, right: 14, bottom: 20, left: 14 },
+        tableWidth: 'auto',
+        showFoot: 'lastPage'
+      });
+
+      // Tạo tên file với ngày hiện tại
+      const fileDate = new Date().toISOString().split('T')[0];
+      const fileName = `BaoCaoDoanhThu_${fileDate}.pdf`;
+
+      // Xuất file PDF
+      doc.save(fileName);
+
+      toast.success("Xuất PDF thành công!", {
+        description: `File ${fileName} đã được tải xuống`,
+        duration: 3000,
+        position: "top-right"
+      });
+    } catch (error) {
+      console.error("Lỗi chi tiết khi xuất PDF:", error);
+      if (error.message) console.error("Error message:", error.message);
+      if (error.stack) console.error("Error stack:", error.stack);
+      
+      toast.error("Xuất PDF thất bại!", {
+        description: "Vui lòng thử lại hoặc liên hệ hỗ trợ",
+        duration: 3000,
+        position: "top-right"
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] p-6 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Control Panel */}
@@ -275,28 +457,52 @@ export default function TableDWH() {
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
               <h2 className="text-sm font-semibold text-gray-700">Bộ lọc dữ liệu</h2>
             </div>
-            <Button
-              onClick={handleExportExcel}
-              className="relative min-w-[120px] h-9 overflow-hidden group"
-              disabled={!displayData || displayData.length === 0}
-            >
-              {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
-              
-              {/* Shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              
-              {/* Border gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 rounded-md p-[1px]">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-md" />
-              </div>
-              
-              {/* Content */}
-              <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
-                <Download className="h-4 w-4 text-white" />
-                <span className="text-sm text-white font-medium">Xuất Excel</span>
-              </div>
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleExportPDF}
+                className="relative min-w-[120px] h-9 overflow-hidden group"
+                disabled={!displayData || displayData.length === 0}
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
+                
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                
+                {/* Border gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-md p-[1px]">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 rounded-md" />
+                </div>
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
+                  <FileText className="h-4 w-4 text-white" />
+                  <span className="text-sm text-white font-medium">Xuất PDF</span>
+                </div>
+              </Button>
+              <Button
+                onClick={handleExportExcel}
+                className="relative min-w-[120px] h-9 overflow-hidden group"
+                disabled={!displayData || displayData.length === 0}
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
+                
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                
+                {/* Border gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 rounded-md p-[1px]">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-md" />
+                </div>
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
+                  <Download className="h-4 w-4 text-white" />
+                  <span className="text-sm text-white font-medium">Xuất Excel</span>
+                </div>
+              </Button>
+            </div>
           </div>
 
           {/* Filters Grid */}
@@ -572,7 +778,7 @@ export default function TableDWH() {
                   <TableHead className="font-semibold text-gray-700 py-4 text-center">Số lượng bản ghi</TableHead>
                 </TableRow>
               </TableHeader>
-              {displayData && displayData.length > 0 && totalQuantity && totalRevenue ? (
+              {paginatedData && paginatedData.length > 0 && totalQuantity && totalRevenue ? (
                 <TableBody>
                   {/* Summary Row */}
                   <TableRow className="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold sticky top-[48px] bg-white/95 backdrop-blur-sm z-10">
@@ -593,11 +799,11 @@ export default function TableDWH() {
                         </svg>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium py-4 text-center">{displayData.length.toLocaleString()}</TableCell>
+                    <TableCell className="font-medium py-4 text-center">{paginatedData.length.toLocaleString()}</TableCell>
                   </TableRow>
                   
                   {/* Data Rows */}
-                  {displayData.map((invoice, index) => (
+                  {paginatedData.map((invoice, index) => (
                     <TableRow 
                       key={index} 
                       className="hover:bg-gray-50/80 transition-all duration-300 border-b border-gray-100"
@@ -656,6 +862,16 @@ export default function TableDWH() {
               )}
             </Table>
           </div>
+          
+          {/* Pagination */}
+          {displayData && displayData.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              isLoading={isLoading}
+            />
+          )}
         </div>
       </Card>
     </div>

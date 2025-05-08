@@ -12,7 +12,7 @@ router.get("/", async (req, res) => {
         NON EMPTY
         (
           [Dim Time].[Year].Members *
-          [Dim Time].[Quater].Members *
+          [Dim Time].[Quarter].Members *
           [Dim Time].[Month].Members *
           [Dim Item].[Item Id].Members *
           [Dim Customer].[Customer Id].Members * 
