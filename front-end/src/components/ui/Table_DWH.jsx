@@ -113,21 +113,33 @@ export default function TableDWH() {
 
   // Optimize handleGetData
   const handleGetData = useCallback(async () => {
-    const cleanDataTmp = await fetchData(dtgValues, dmhValues, dkhValues);
-    if (cleanDataTmp.length > 0) {
-      setCleanData(cleanDataTmp);
-      setDisplayData(cleanDataTmp);
-      const distinctOptions = extractDistinctValues(cleanDataTmp);
-      setFilterOptions(distinctOptions);
-      setFilterSelection({
-        month: [],
-        quarter: [],
-        year: [],
-        product: [],
-        customer: [],
-        city: [],
-        state: [],
+    try {
+      setIsLoading(true);
+      const cleanDataTmp = await fetchData(dtgValues, dmhValues, dkhValues);
+      if (cleanDataTmp.length > 0) {
+        setCleanData(cleanDataTmp);
+        setDisplayData(cleanDataTmp);
+        const distinctOptions = extractDistinctValues(cleanDataTmp);
+        setFilterOptions(distinctOptions);
+        setFilterSelection({
+          month: [],
+          quarter: [],
+          year: [],
+          product: [],
+          customer: [],
+          city: [],
+          state: [],
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Lỗi khi tải dữ liệu!", {
+        description: "Vui lòng thử lại sau",
+        duration: 3000,
+        position: "top-right"
       });
+    } finally {
+      setIsLoading(false);
     }
   }, [fetchData, dtgValues, dmhValues, dkhValues]);
 
@@ -449,73 +461,124 @@ export default function TableDWH() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] p-6 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Control Panel */}
-      <Card className="p-4 bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm shadow-lg border-0">
-        <div className="space-y-4">
+      <Card className="p-6 bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm shadow-lg border-0">
+        <div className="space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-              <h2 className="text-sm font-semibold text-gray-700">Bộ lọc dữ liệu</h2>
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-75"></div>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Bộ lọc dữ liệu</h2>
+                <p className="text-sm text-gray-500">Chọn các tiêu chí để lọc và phân tích dữ liệu</p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-4">
+              {/* Action Button */}
               <Button
-                onClick={handleExportPDF}
-                className="relative min-w-[120px] h-9 overflow-hidden group"
-                disabled={!displayData || displayData.length === 0}
+                onClick={handleGetData}
+                disabled={
+                  (dtgValues === "None" &&
+                    dmhValues === "None" &&
+                    dkhValues === "None") ||
+                  isLoading
+                }
+                className="relative min-w-[160px] h-11 overflow-hidden group bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
-                
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                
-                {/* Border gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-md p-[1px]">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 rounded-md" />
-                </div>
-                
-                {/* Content */}
-                <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
-                  <FileText className="h-4 w-4 text-white" />
-                  <span className="text-sm text-white font-medium">Xuất PDF</span>
+                <div className="relative flex items-center justify-center gap-3 px-6 py-2.5">
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                      <span className="text-sm text-white font-medium">Đang xử lý...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <svg 
+                        className="w-5 h-5" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                        />
+                      </svg>
+                      <span className="text-sm font-medium">Xác nhận</span>
+                    </div>
+                  )}
                 </div>
               </Button>
-              <Button
-                onClick={handleExportExcel}
-                className="relative min-w-[120px] h-9 overflow-hidden group"
-                disabled={!displayData || displayData.length === 0}
-              >
-                {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
-                
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                
-                {/* Border gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 rounded-md p-[1px]">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-md" />
-                </div>
-                
-                {/* Content */}
-                <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
-                  <Download className="h-4 w-4 text-white" />
-                  <span className="text-sm text-white font-medium">Xuất Excel</span>
-                </div>
-              </Button>
+
+              <div className="h-8 w-[1px] bg-gray-200" />
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleExportPDF}
+                  className="relative min-w-[130px] h-10 overflow-hidden group"
+                  disabled={!displayData || displayData.length === 0}
+                >
+                  {/* Background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
+                  
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  
+                  {/* Border gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-md p-[1px]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 rounded-md" />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="relative flex items-center justify-center gap-2 px-4 py-2">
+                    <FileText className="h-4 w-4 text-white" />
+                    <span className="text-sm text-white font-medium">Xuất PDF</span>
+                  </div>
+                </Button>
+                <Button
+                  onClick={handleExportExcel}
+                  className="relative min-w-[130px] h-10 overflow-hidden group"
+                  disabled={!displayData || displayData.length === 0}
+                >
+                  {/* Background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
+                  
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  
+                  {/* Border gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 rounded-md p-[1px]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-md" />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="relative flex items-center justify-center gap-2 px-4 py-2">
+                    <Download className="h-4 w-4 text-white" />
+                    <span className="text-sm text-white font-medium">Xuất Excel</span>
+                  </div>
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Filters Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Thời Gian */}
-            <div className="group">
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="p-1 rounded-md bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                  <svg className="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                  <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <label className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Thời Gian</label>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">Thời Gian</label>
+                  <p className="text-xs text-gray-500">Chọn khoảng thời gian phân tích</p>
+                </div>
               </div>
               <SelectLocal
                 placeholder="DIM_ThoiGian"
@@ -532,14 +595,17 @@ export default function TableDWH() {
             </div>
 
             {/* Mặt Hàng */}
-            <div className="group">
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="p-1 rounded-md bg-purple-50 group-hover:bg-purple-100 transition-colors">
-                  <svg className="w-3.5 h-3.5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors">
+                  <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <label className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Mặt Hàng</label>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">Mặt Hàng</label>
+                  <p className="text-xs text-gray-500">Chọn loại mặt hàng cần phân tích</p>
+                </div>
               </div>
               <SelectLocal
                 placeholder="Dim_Item"
@@ -554,14 +620,17 @@ export default function TableDWH() {
             </div>
 
             {/* Khách Hàng */}
-            <div className="group">
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="p-1 rounded-md bg-green-50 group-hover:bg-green-100 transition-colors">
-                  <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
+                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <label className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Khách Hàng</label>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">Khách Hàng</label>
+                  <p className="text-xs text-gray-500">Chọn nhóm khách hàng cần phân tích</p>
+                </div>
               </div>
               <SelectLocal
                 placeholder="Dim_Customer"
@@ -577,55 +646,6 @@ export default function TableDWH() {
               />
             </div>
           </div>
-
-          {/* Action Button */}
-          <div className="flex justify-end">
-            <Button
-              onClick={handleGetData}
-              disabled={
-                (dtgValues === "None" &&
-                  dmhValues === "None" &&
-                  dkhValues === "None") ||
-                isLoading
-              }
-              className="relative min-w-[120px] h-9 overflow-hidden group"
-            >
-              {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
-              
-              {/* Shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              
-              {/* Border gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 rounded-md p-[1px]">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-md" />
-              </div>
-              
-              {/* Content */}
-              <div className="relative flex items-center justify-center gap-1.5 px-4 py-1.5">
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm text-white font-medium">Xác nhận</span>
-                    <svg 
-                      className="w-3.5 h-3.5 text-white transform group-hover:translate-x-0.5 transition-transform duration-300" 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M13 7l5 5m0 0l-5 5m5-5H6" 
-                      />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </Button>
-          </div>
         </div>
       </Card>
 
@@ -637,91 +657,98 @@ export default function TableDWH() {
               <TableHeader className="sticky top-0 bg-white/95 backdrop-blur-sm z-10">
                 <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-300">
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Tháng</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Tháng</span>
                       <PopoverLocal
                         optionArray={filterOptions.month}
                         filterKey={"month"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Quý</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Quý</span>
                       <PopoverLocal
                         optionArray={filterOptions.quarter}
                         filterKey={"quarter"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Năm</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Năm</span>
                       <PopoverLocal
                         optionArray={filterOptions.year}
                         filterKey={"year"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Mã mặt hàng</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Mã mặt hàng</span>
                       <PopoverLocal
                         optionArray={filterOptions.product}
                         filterKey={"product"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Khách hàng</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Khách hàng</span>
                       <PopoverLocal
                         optionArray={filterOptions.customer}
                         filterKey={"customer"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Thành phố</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Thành phố</span>
                       <PopoverLocal
                         optionArray={filterOptions.city}
                         filterKey={"city"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>Bang</span>
+                    <div className="flex items-center justify-center gap-2 group">
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Bang</span>
                       <PopoverLocal
                         optionArray={filterOptions.state}
                         filterKey={"state"}
                         filterSelection={filterSelection}
                         setFilterSelection={setFilterSelection}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       />
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
                     <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
-                      <span>Số lượng</span>
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Số lượng</span>
                       <div className="flex flex-col">
                         <svg 
                           className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                             sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'ascending' 
                               ? 'text-blue-500 transform -translate-y-0.5' 
-                              : 'group-hover:text-gray-500'
+                              : 'group-hover:text-blue-500'
                           }`} 
                           fill="none" 
                           viewBox="0 0 24 24" 
@@ -733,7 +760,7 @@ export default function TableDWH() {
                           className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                             sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'descending' 
                               ? 'text-blue-500 transform translate-y-0.5' 
-                              : 'group-hover:text-gray-500'
+                              : 'group-hover:text-blue-500'
                           }`} 
                           fill="none" 
                           viewBox="0 0 24 24" 
@@ -746,13 +773,13 @@ export default function TableDWH() {
                   </TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
                     <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
-                      <span>Tổng doanh thu</span>
+                      <span className="group-hover:text-blue-600 transition-colors duration-200">Tổng doanh thu</span>
                       <div className="flex flex-col">
                         <svg 
                           className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                             sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'ascending' 
                               ? 'text-blue-500 transform -translate-y-0.5' 
-                              : 'group-hover:text-gray-500'
+                              : 'group-hover:text-blue-500'
                           }`} 
                           fill="none" 
                           viewBox="0 0 24 24" 
@@ -764,7 +791,7 @@ export default function TableDWH() {
                           className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
                             sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'descending' 
                               ? 'text-blue-500 transform translate-y-0.5' 
-                              : 'group-hover:text-gray-500'
+                              : 'group-hover:text-blue-500'
                           }`} 
                           fill="none" 
                           viewBox="0 0 24 24" 
