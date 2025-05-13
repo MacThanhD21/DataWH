@@ -7,6 +7,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function PopoverLocal({
   optionArray = [],
@@ -56,20 +57,23 @@ export function PopoverLocal({
                 <div className="!w-full flex items-center justify-center gap-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="lucide lucide-eraser-icon lucide-eraser"
+                    className="text-red-500"
                   >
-                    <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
-                    <path d="M22 21H7" />
-                    <path d="m5 11 9 9" />
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
                   </svg>
+                  <span className="text-sm font-medium text-red-500">Xóa tất cả</span>
                 </div>
               </Button>
             </div>
@@ -90,25 +94,42 @@ export function PopoverLocal({
                   });
                 }}
               >
-                <Button variant="outline" className="!w-full">
+                <Button 
+                  variant="outline" 
+                  className={cn(
+                    "!w-full transition-all duration-200",
+                    filterSelection[filterKey].includes(option) 
+                      ? "bg-blue-50 border-blue-200 hover:bg-blue-100" 
+                      : "hover:bg-gray-50"
+                  )}
+                >
                   <div className="!w-[max-content] flex items-center justify-center gap-2">
-                    {filterSelection[filterKey].includes(option) && (
+                    {filterSelection[filterKey].includes(option) ? (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="lucide lucide-check-icon lucide-check"
+                        className="text-blue-600"
                       >
                         <path d="M20 6 9 17l-5-5" />
                       </svg>
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-sm border border-gray-300" />
                     )}
-                    {option}
+                    <span className={cn(
+                      "text-sm font-medium",
+                      filterSelection[filterKey].includes(option)
+                        ? "text-blue-700"
+                        : "text-gray-700"
+                    )}>
+                      {option}
+                    </span>
                   </div>
                 </Button>
               </div>

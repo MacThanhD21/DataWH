@@ -2,21 +2,18 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { SelectLocal } from "./ui_local/select_local";
 import { Button } from "./button";
-import { use, useEffect, useState, useMemo, useCallback } from "react";
-import axiosInstance from "@/config/axios";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Loader2, Download, FileText } from "lucide-react";
 import { PopoverLocal } from "./ui_local/popover_local";
 import { extractDistinctValues } from "@/utils/functions";
-import { Card, CardContent } from "./card";
+import { Card } from "./card";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -25,7 +22,6 @@ import Pagination from "./Pagination";
 import { useDataFetching } from '@/hooks/useDataFetching';
 
 export default function TableDWH() {
-  const [metaData, setMetaData] = useState({});
   const [cleanData, setCleanData] = useState([]);
   const [displayData, setDisplayData] = useState([]);
   const [dtgValues, setDTGValues] = useState("Month");
