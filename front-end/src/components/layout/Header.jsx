@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaChartLine, FaDatabase, FaCog, FaUser, FaBell } from "react-icons/fa";
+import { FaDatabase, FaCog, FaUser, FaBell } from "react-icons/fa";
 import { useState } from "react";
 
 const Header = () => {
@@ -10,38 +10,27 @@ const Header = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo và Navigation */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600 group-hover:from-green-600 group-hover:to-green-700 transition-all duration-300">
-                <FaChartLine className="h-5 w-5 text-white" />
+            <Link href="/" className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-600">
+                <FaDatabase className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
-                Order System Analytics
+              <span className="text-xl font-bold text-blue-800">
+                Data Warehouse
               </span>
             </Link>
             
             <nav className="hidden md:flex items-center gap-1">
               <Link
-                href="/dashboard"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                  pathname === "/dashboard"
-                    ? "bg-green-50 text-green-700 shadow-sm"
-                    : "text-gray-600 hover:text-green-700 hover:bg-green-50/50"
-                }`}
-              >
-                <FaChartLine className="h-4 w-4" />
-                <span className="font-medium">Dashboard</span>
-              </Link>
-              <Link
                 href="/"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
                   pathname === "/"
-                    ? "bg-green-50 text-green-700 shadow-sm"
-                    : "text-gray-600 hover:text-green-700 hover:bg-green-50/50"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-blue-700 hover:bg-blue-50"
                 }`}
               >
                 <FaDatabase className="h-4 w-4" />
@@ -53,7 +42,7 @@ const Header = () => {
           {/* User Actions */}
           <div className="flex items-center gap-3">
             <button 
-              className="p-2 rounded-lg text-gray-600 hover:text-green-700 hover:bg-green-50/50 transition-all duration-300 relative"
+              className="p-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50"
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
             >
               <FaBell className="h-5 w-5" />
@@ -66,17 +55,18 @@ const Header = () => {
             
             <Link
               href="/settings"
-              className={`p-2 rounded-lg transition-all duration-300 ${
+              className={`p-2 rounded-lg ${
                 pathname === "/settings"
-                  ? "bg-green-50 text-green-700 shadow-sm"
-                  : "text-gray-600 hover:text-green-700 hover:bg-green-50/50"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:text-blue-700 hover:bg-blue-50"
               }`}
             >
               <FaCog className="h-5 w-5" />
             </Link>
             
-            <button className="p-2 rounded-lg text-gray-600 hover:text-green-700 hover:bg-green-50/50 transition-all duration-300">
+            <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:text-blue-700 hover:bg-blue-50">
               <FaUser className="h-5 w-5" />
+              <span className="hidden md:block font-medium">Admin</span>
             </button>
           </div>
         </div>

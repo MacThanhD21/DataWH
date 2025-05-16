@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { SelectLocal } from "./ui_local/select_local";
 import { Button } from "./button";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { Loader2, Download, FileText } from "lucide-react";
 import { PopoverLocal } from "./ui_local/popover_local";
 import { extractDistinctValues } from "@/utils/functions";
@@ -20,6 +20,530 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Pagination from "./Pagination";
 import { useDataFetching } from '@/hooks/useDataFetching';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line
+} from 'recharts';
+
+// Tách component TableHeader thành component riêng
+const TableHeaderComponent = memo(({ 
+  filterOptions, 
+  filterSelection, 
+  setFilterSelection, 
+  handleSort, 
+  sortConfig 
+}) => (
+  <TableHeader className="sticky top-0 bg-white z-10">
+    <TableRow>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Tháng</span>
+          <PopoverLocal
+            optionArray={filterOptions.month}
+            filterKey={"month"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Quý</span>
+          <PopoverLocal
+            optionArray={filterOptions.quarter}
+            filterKey={"quarter"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Năm</span>
+          <PopoverLocal
+            optionArray={filterOptions.year}
+            filterKey={"year"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Mã mặt hàng</span>
+          <PopoverLocal
+            optionArray={filterOptions.product}
+            filterKey={"product"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Khách hàng</span>
+          <PopoverLocal
+            optionArray={filterOptions.customer}
+            filterKey={"customer"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Thành phố</span>
+          <PopoverLocal
+            optionArray={filterOptions.city}
+            filterKey={"city"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <span>Bang</span>
+          <PopoverLocal
+            optionArray={filterOptions.state}
+            filterKey={"state"}
+            filterSelection={filterSelection}
+            setFilterSelection={setFilterSelection}
+          />
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
+          <span className="group-hover:text-blue-600 transition-colors duration-200">Số lượng</span>
+          <div className="flex flex-col">
+            <svg 
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'ascending' 
+                  ? 'text-blue-500 transform -translate-y-0.5' 
+                  : 'group-hover:text-blue-500'
+              }`} 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+            <svg 
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'descending' 
+                  ? 'text-blue-500 transform translate-y-0.5' 
+                  : 'group-hover:text-blue-500'
+              }`} 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
+        <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
+          <span className="group-hover:text-blue-600 transition-colors duration-200">Tổng doanh thu</span>
+          <div className="flex flex-col">
+            <svg 
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'ascending' 
+                  ? 'text-blue-500 transform -translate-y-0.5' 
+                  : 'group-hover:text-blue-500'
+              }`} 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+            <svg 
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
+                sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'descending' 
+                  ? 'text-blue-500 transform translate-y-0.5' 
+                  : 'group-hover:text-blue-500'
+              }`} 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 text-center">Số lượng bản ghi</TableHead>
+    </TableRow>
+  </TableHeader>
+));
+
+// Tách component TableRow thành component riêng
+const TableRowComponent = memo(({ invoice }) => (
+  <TableRow className="border-b border-gray-100">
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[State].[State].[MEMBER_CAPTION]"]}</TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">
+      {invoice["[Measures].[Quantity]"].toLocaleString()}
+    </TableCell>
+    <TableCell className="py-3 border-r border-gray-100 text-center">
+      {invoice["[Measures].[Total Revenue]"].toLocaleString('vi-VN')} VND
+    </TableCell>
+    <TableCell className="py-3 text-center"></TableCell>
+  </TableRow>
+));
+
+// Tách component SummaryRow thành component riêng
+const SummaryRowComponent = memo(({ totalQuantity, totalRevenue, paginatedData }) => (
+  <TableRow className="bg-gray-50 font-semibold sticky top-[48px] z-10">
+    <TableCell colSpan={7} className="text-center py-4 border-r border-gray-200">Tổng cộng:</TableCell>
+    <TableCell className="py-4 border-r border-gray-200 text-center">
+      {totalQuantity.toLocaleString()}
+    </TableCell>
+    <TableCell className="py-4 border-r border-gray-200 text-center">
+      {totalRevenue.toLocaleString('vi-VN')} VND
+    </TableCell>
+    <TableCell className="py-4 text-center">{paginatedData.length.toLocaleString()}</TableCell>
+  </TableRow>
+));
+
+// Tách component Dashboard thành component riêng
+const DashboardComponent = memo(({ displayData }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const chartsPerPage = 4;
+
+  // Tính toán dữ liệu cho các biểu đồ
+  const chartData = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+
+    // Nhóm dữ liệu theo tháng
+    const monthlyData = displayData.reduce((acc, item) => {
+      const month = item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"];
+      if (!acc[month]) {
+        acc[month] = {
+          month,
+          quantity: 0,
+          revenue: 0
+        };
+      }
+      acc[month].quantity += item["[Measures].[Quantity]"];
+      acc[month].revenue += item["[Measures].[Total Revenue]"];
+      return acc;
+    }, {});
+
+    return Object.values(monthlyData).sort((a, b) => {
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                     'July', 'August', 'September', 'October', 'November', 'December'];
+      return months.indexOf(a.month) - months.indexOf(b.month);
+    });
+  }, [displayData]);
+
+  // Tính toán dữ liệu cho biểu đồ tròn
+  const pieData = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+
+    // Nhóm dữ liệu theo thành phố
+    const cityData = displayData.reduce((acc, item) => {
+      const city = item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"];
+      if (!acc[city]) {
+        acc[city] = {
+          name: city,
+          value: 0
+        };
+      }
+      acc[city].value += item["[Measures].[Total Revenue]"];
+      return acc;
+    }, {});
+
+    return Object.values(cityData).sort((a, b) => b.value - a.value).slice(0, 5);
+  }, [displayData]);
+
+  // Tính toán dữ liệu cho các biểu đồ khác
+  const stateData = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+    return displayData.reduce((acc, item) => {
+      const state = item["[Dim Customer].[State].[State].[MEMBER_CAPTION]"];
+      if (!acc[state]) {
+        acc[state] = {
+          name: state,
+          value: 0
+        };
+      }
+      acc[state].value += item["[Measures].[Total Revenue]"];
+      return acc;
+    }, {});
+  }, [displayData]);
+
+  const customerData = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+    return displayData.reduce((acc, item) => {
+      const customer = item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"];
+      if (!acc[customer]) {
+        acc[customer] = {
+          name: customer,
+          value: 0
+        };
+      }
+      acc[customer].value += item["[Measures].[Total Revenue]"];
+      return acc;
+    }, {});
+  }, [displayData]);
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+
+  // Định nghĩa tất cả các biểu đồ
+  const allCharts = [
+    {
+      title: "Thống kê tổng quan",
+      type: "overview",
+      data: displayData,
+      stats: [
+        {
+          title: "Tổng doanh thu",
+          value: displayData.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0),
+          format: "currency",
+          color: "blue"
+        },
+        {
+          title: "Tổng số lượng",
+          value: displayData.reduce((acc, item) => acc + item["[Measures].[Quantity]"], 0),
+          format: "number",
+          color: "green"
+        },
+        {
+          title: "Số lượng đơn hàng",
+          value: displayData.length,
+          format: "number",
+          color: "purple"
+        },
+        {
+          title: "Doanh thu trung bình",
+          value: displayData.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0) / displayData.length,
+          format: "currency",
+          color: "orange"
+        }
+      ]
+    },
+    {
+      title: "Doanh thu theo tháng",
+      type: "bar",
+      data: chartData,
+      dataKey: "revenue",
+      name: "Doanh thu",
+      color: "#8884d8"
+    },
+    {
+      title: "Số lượng bán theo tháng",
+      type: "line",
+      data: chartData,
+      dataKey: "quantity",
+      name: "Số lượng",
+      color: "#82ca9d"
+    },
+    {
+      title: "Top 5 thành phố có doanh thu cao nhất",
+      type: "pie",
+      data: pieData,
+      dataKey: "value",
+      name: "Doanh thu",
+      color: COLORS
+    },
+    {
+      title: "Doanh thu theo bang",
+      type: "bar",
+      data: Object.values(stateData).sort((a, b) => b.value - a.value).slice(0, 10),
+      dataKey: "value",
+      name: "Doanh thu",
+      color: "#8884d8"
+    },
+    {
+      title: "Top 10 khách hàng có doanh thu cao nhất",
+      type: "bar",
+      data: Object.values(customerData).sort((a, b) => b.value - a.value).slice(0, 10),
+      dataKey: "value",
+      name: "Doanh thu",
+      color: "#82ca9d"
+    },
+    {
+      title: "Phân bố doanh thu theo quý",
+      type: "pie",
+      data: displayData.reduce((acc, item) => {
+        const quarter = item["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"];
+        if (!acc[quarter]) {
+          acc[quarter] = {
+            name: quarter,
+            value: 0
+          };
+        }
+        acc[quarter].value += item["[Measures].[Total Revenue]"];
+        return acc;
+      }, {}),
+      dataKey: "value",
+      name: "Doanh thu",
+      color: COLORS
+    },
+    // Thêm các biểu đồ khác ở đây...
+  ];
+
+  // Tính toán số trang
+  const totalPages = Math.ceil(allCharts.length / chartsPerPage);
+
+  // Lấy các biểu đồ cho trang hiện tại
+  const currentCharts = allCharts.slice(
+    currentPage * chartsPerPage,
+    (currentPage + 1) * chartsPerPage
+  );
+
+  // Xử lý chuyển trang
+  const handleNextPage = () => {
+    setCurrentPage((prev) => (prev + 1) % totalPages);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+  };
+
+  // Render biểu đồ
+  const renderChart = (chart) => {
+    if (chart.type === "overview") {
+      return (
+        <div className="grid grid-cols-2 gap-4 h-[300px]">
+          {chart.stats.map((stat, index) => (
+            <div key={index} className={`bg-${stat.color}-50 p-4 rounded-lg flex flex-col justify-center`}>
+              <p className={`text-sm text-${stat.color}-600 mb-2`}>{stat.title}</p>
+              <p className={`text-2xl font-bold text-${stat.color}-700`}>
+                {stat.format === "currency" 
+                  ? `${stat.value.toLocaleString('vi-VN')} VND`
+                  : stat.value.toLocaleString()}
+              </p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (chart.type === "bar") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chart.data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey={chart.dataKey} name={chart.name} fill={chart.color} />
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    if (chart.type === "line") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chart.data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey={chart.dataKey} name={chart.name} stroke={chart.color} />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    if (chart.type === "pie") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={Object.values(chart.data)}
+              dataKey={chart.dataKey}
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              fill="#8884d8"
+              label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+            >
+              {Object.values(chart.data).map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={chart.color[index % chart.color.length]} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, chart.name]}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className="w-full max-w-[1200px] mx-auto">
+      <div className="relative">
+        {/* Nút điều hướng */}
+        <div className="absolute -left-12 top-1/2 transform -translate-y-1/2">
+          <button
+            onClick={handlePrevPage}
+            className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+            disabled={currentPage === 0}
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="absolute -right-12 top-1/2 transform -translate-y-1/2">
+          <button
+            onClick={handleNextPage}
+            className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 transition-colors"
+            disabled={currentPage === totalPages - 1}
+          >
+            <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Grid biểu đồ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {currentCharts.map((chart, index) => (
+            <Card key={index} className="p-4">
+              <h3 className="text-base font-semibold mb-3">{chart.title}</h3>
+              <div className="h-[300px]">
+                {renderChart(chart)}
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Chỉ báo trang */}
+        <div className="flex justify-center mt-4 gap-2">
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                currentPage === index ? 'bg-blue-500' : 'bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export default function TableDWH() {
   const [cleanData, setCleanData] = useState([]);
@@ -298,52 +822,135 @@ export default function TableDWH() {
 
       // Tạo instance của jsPDF với cấu hình phù hợp
       const doc = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
         putOnlyUsedFonts: true,
         floatPrecision: 16
       });
 
-      // Thêm logo hoặc hình ảnh (nếu có)
-      // doc.addImage(logoBase64, 'PNG', 14, 10, 30, 30);
+      // Thêm font Times New Roman
+      doc.setFont("times", "normal");
 
-      // Thêm tiêu đề với font size lớn hơn và màu sắc
+      // Thêm tiêu đề
       doc.setFontSize(24);
-      doc.setTextColor(41, 128, 185); // Màu xanh dương
-      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
       doc.text('Báo Cáo Doanh Thu', doc.internal.pageSize.width / 2, 25, { align: 'center' });
 
-      // Thêm thông tin thời gian với font size nhỏ hơn
+      // Thêm thông tin thời gian
       const currentDate = new Date().toLocaleDateString('vi-VN');
       doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100); // Màu xám
-      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
       doc.text(`Ngày xuất báo cáo: ${currentDate}`, doc.internal.pageSize.width / 2, 35, { align: 'center' });
 
       // Thêm đường kẻ ngang
       doc.setDrawColor(200, 200, 200);
       doc.line(14, 40, doc.internal.pageSize.width - 14, 40);
 
-      // Chuẩn bị dữ liệu cho bảng
-      const tableData = displayData.map(item => {
-        try {
-          return [
-            item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"] || '',
-            item["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"] || '',
-            item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"] || '',
-            item["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"] || '',
-            item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"] || '',
-            item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"] || '',
-            item["[Dim Customer].[State].[State].[MEMBER_CAPTION]"] || '',
-            (item["[Measures].[Quantity]"] || 0).toLocaleString(),
-            (item["[Measures].[Total Revenue]"] || 0).toLocaleString('vi-VN') + ' VND'
-          ];
-        } catch (error) {
-          console.error("Lỗi khi xử lý dòng dữ liệu:", error);
-          return Array(9).fill('');
+      // Tính toán dữ liệu cho biểu đồ
+      const chartData = displayData.reduce((acc, item) => {
+        const month = item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"];
+        if (!acc[month]) {
+          acc[month] = {
+            month,
+            quantity: 0,
+            revenue: 0
+          };
+        }
+        acc[month].quantity += item["[Measures].[Quantity]"];
+        acc[month].revenue += item["[Measures].[Total Revenue]"];
+        return acc;
+      }, {});
+
+      const monthlyData = Object.values(chartData).sort((a, b) => {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+        return months.indexOf(a.month) - months.indexOf(b.month);
+      });
+
+      // Tạo canvas cho dashboard
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Vẽ các biểu đồ lên canvas
+      const dashboardComponent = document.querySelector('.dashboard-container');
+      if (dashboardComponent) {
+        const svgElements = dashboardComponent.querySelectorAll('svg');
+        svgElements.forEach((svg, index) => {
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const img = new Image();
+          img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+          ctx.drawImage(img, 0, index * 200, 1200, 200);
+        });
+      }
+
+      // Chuyển canvas thành ảnh
+      const dashboardImage = canvas.toDataURL('image/png');
+
+      // Thêm ảnh dashboard vào PDF
+      doc.addImage(dashboardImage, 'PNG', 14, 45, 180, 120);
+
+      // Thêm thống kê tổng quan
+      doc.setFontSize(16);
+      doc.setTextColor(41, 128, 185);
+      doc.text('Thống kê tổng quan', 14, 175);
+
+      const totalRevenue = displayData.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0);
+      const totalQuantity = displayData.reduce((acc, item) => acc + item["[Measures].[Quantity]"], 0);
+      const avgRevenue = totalRevenue / displayData.length;
+
+      // Tạo bảng thống kê
+      autoTable(doc, {
+        startY: 180,
+        head: [['Chỉ số', 'Giá trị']],
+        body: [
+          ['Tổng doanh thu', totalRevenue.toLocaleString('vi-VN') + ' VND'],
+          ['Tổng số lượng', totalQuantity.toLocaleString()],
+          ['Số lượng đơn hàng', displayData.length.toLocaleString()],
+          ['Doanh thu trung bình', avgRevenue.toLocaleString('vi-VN') + ' VND']
+        ],
+        theme: 'grid',
+        styles: {
+          font: 'times',
+          fontSize: 10,
+          cellPadding: 5,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+          textColor: [50, 50, 50]
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 100, halign: 'right' }
         }
       });
+
+      // Thêm chi tiết dữ liệu
+      doc.setFontSize(16);
+      doc.setTextColor(41, 128, 185);
+      doc.text('Chi tiết dữ liệu', 14, doc.lastAutoTable.finalY + 20);
+
+      // Chuẩn bị dữ liệu cho bảng chi tiết
+      const tableData = displayData.map(item => [
+        item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"] || '',
+        item["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"] || '',
+        item["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"] || '',
+        item["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"] || '',
+        item["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"] || '',
+        item["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"] || '',
+        item["[Dim Customer].[State].[State].[MEMBER_CAPTION]"] || '',
+        (item["[Measures].[Quantity]"] || 0).toLocaleString(),
+        (item["[Measures].[Total Revenue]"] || 0).toLocaleString('vi-VN') + ' VND'
+      ]);
 
       // Thêm dòng tổng cộng
       tableData.push([
@@ -358,17 +965,17 @@ export default function TableDWH() {
         totalRevenue.toLocaleString('vi-VN') + ' VND'
       ]);
 
-      // Tạo bảng với định dạng đẹp
+      // Tạo bảng chi tiết
       autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 25,
         head: [['Tháng', 'Quý', 'Năm', 'Mã mặt hàng', 'Khách hàng', 'Thành phố', 'Bang', 'Số lượng', 'Tổng doanh thu']],
         body: tableData,
-        startY: 45,
         theme: 'grid',
         styles: {
-          fontSize: 9,
+          font: 'times',
+          fontSize: 8,
           cellPadding: 3,
           overflow: 'linebreak',
-          font: 'helvetica',
           lineColor: [200, 200, 200],
           lineWidth: 0.1,
           textColor: [50, 50, 50]
@@ -378,9 +985,7 @@ export default function TableDWH() {
           textColor: 255,
           fontStyle: 'bold',
           halign: 'center',
-          fontSize: 10,
-          lineWidth: 0.1,
-          cellPadding: 4
+          fontSize: 9
         },
         alternateRowStyles: {
           fillColor: [245, 245, 245]
@@ -401,8 +1006,7 @@ export default function TableDWH() {
           textColor: 255,
           fontStyle: 'bold',
           halign: 'right',
-          fontSize: 10,
-          cellPadding: 4
+          fontSize: 9
         },
         didDrawPage: function(data) {
           // Thêm footer cho mỗi trang
@@ -455,107 +1059,48 @@ export default function TableDWH() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] p-6 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex flex-col min-h-screen p-6 space-y-6 bg-white">
       {/* Control Panel */}
-      <Card className="p-6 bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm shadow-lg border-0">
+      <Card className="p-6 bg-white">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
-                <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-75"></div>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800">Bộ lọc dữ liệu</h2>
-                <p className="text-sm text-gray-500">Chọn các tiêu chí để lọc và phân tích dữ liệu</p>
-              </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Bộ lọc dữ liệu</h2>
+              <p className="text-sm text-gray-500">Chọn các tiêu chí để lọc và phân tích dữ liệu</p>
             </div>
             <div className="flex items-center gap-4">
-              {/* Action Button */}
               <Button
                 onClick={handleGetData}
-                disabled={
-                  (dtgValues === "None" &&
-                    dmhValues === "None" &&
-                    dkhValues === "None") ||
-                  isLoading
-                }
-                className="relative min-w-[160px] h-11 overflow-hidden group bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={(dtgValues === "None" && dmhValues === "None" && dkhValues === "None") || isLoading}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
               >
-                <div className="relative flex items-center justify-center gap-3 px-6 py-2.5">
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-white" />
-                      <span className="text-sm text-white font-medium">Đang xử lý...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <svg 
-                        className="w-5 h-5" 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-                        />
-                      </svg>
-                      <span className="text-sm font-medium">Xác nhận</span>
-                    </div>
-                  )}
-                </div>
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Đang xử lý...</span>
+                  </div>
+                ) : (
+                  <span>Xác nhận</span>
+                )}
               </Button>
-
-              <div className="h-8 w-[1px] bg-gray-200" />
 
               <div className="flex gap-3">
                 <Button
                   onClick={handleExportPDF}
-                  className="relative min-w-[130px] h-10 overflow-hidden group"
+                  className="bg-red-500 hover:bg-red-600 text-white"
                   disabled={!displayData || displayData.length === 0}
                 >
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
-                  
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  
-                  {/* Border gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-md p-[1px]">
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-600 rounded-md" />
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="relative flex items-center justify-center gap-2 px-4 py-2">
-                    <FileText className="h-4 w-4 text-white" />
-                    <span className="text-sm text-white font-medium">Xuất PDF</span>
-                  </div>
+                  <FileText className="h-4 w-4 mr-2" />
+                  <span>Xuất PDF</span>
                 </Button>
                 <Button
                   onClick={handleExportExcel}
-                  className="relative min-w-[130px] h-10 overflow-hidden group"
+                  className="bg-green-500 hover:bg-green-600 text-white"
                   disabled={!displayData || displayData.length === 0}
                 >
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-[length:200%_100%] group-hover:bg-[length:100%_100%] transition-all duration-500" />
-                  
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  
-                  {/* Border gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 rounded-md p-[1px]">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-md" />
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="relative flex items-center justify-center gap-2 px-4 py-2">
-                    <Download className="h-4 w-4 text-white" />
-                    <span className="text-sm text-white font-medium">Xuất Excel</span>
-                  </div>
+                  <Download className="h-4 w-4 mr-2" />
+                  <span>Xuất Excel</span>
                 </Button>
               </div>
             </div>
@@ -564,17 +1109,10 @@ export default function TableDWH() {
           {/* Filters Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Thời Gian */}
-            <div className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                  <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">Thời Gian</label>
-                  <p className="text-xs text-gray-500">Chọn khoảng thời gian phân tích</p>
-                </div>
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="mb-3">
+                <label className="text-sm font-medium text-gray-700">Thời Gian</label>
+                <p className="text-xs text-gray-500">Chọn khoảng thời gian phân tích</p>
               </div>
               <SelectLocal
                 placeholder="DIM_ThoiGian"
@@ -591,17 +1129,10 @@ export default function TableDWH() {
             </div>
 
             {/* Mặt Hàng */}
-            <div className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors">
-                  <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">Mặt Hàng</label>
-                  <p className="text-xs text-gray-500">Chọn loại mặt hàng cần phân tích</p>
-                </div>
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="mb-3">
+                <label className="text-sm font-medium text-gray-700">Mặt Hàng</label>
+                <p className="text-xs text-gray-500">Chọn loại mặt hàng cần phân tích</p>
               </div>
               <SelectLocal
                 placeholder="Dim_Item"
@@ -616,17 +1147,10 @@ export default function TableDWH() {
             </div>
 
             {/* Khách Hàng */}
-            <div className="group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
-                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">Khách Hàng</label>
-                  <p className="text-xs text-gray-500">Chọn nhóm khách hàng cần phân tích</p>
-                </div>
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="mb-3">
+                <label className="text-sm font-medium text-gray-700">Khách Hàng</label>
+                <p className="text-xs text-gray-500">Chọn nhóm khách hàng cần phân tích</p>
               </div>
               <SelectLocal
                 placeholder="Dim_Customer"
@@ -645,221 +1169,34 @@ export default function TableDWH() {
         </div>
       </Card>
 
+      {/* Dashboard */}
+      {displayData && displayData.length > 0 && (
+        <div className="w-full flex justify-center">
+          <DashboardComponent displayData={displayData} />
+        </div>
+      )}
+
       {/* Data Table */}
-      <Card className="flex-1 overflow-hidden bg-white/90 backdrop-blur-sm shadow-lg border-0">
+      <Card className="flex-1 overflow-hidden bg-white">
         <div className="h-full flex flex-col">
-          <div className="overflow-auto flex-1 custom-scrollbar">
+          <div className="overflow-auto flex-1">
             <Table className="min-w-[1024px]">
-              <TableHeader className="sticky top-0 bg-white/95 backdrop-blur-sm z-10">
-                <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-300">
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Tháng</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.month}
-                        filterKey={"month"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Quý</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.quarter}
-                        filterKey={"quarter"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Năm</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.year}
-                        filterKey={"year"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Mã mặt hàng</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.product}
-                        filterKey={"product"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Khách hàng</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.customer}
-                        filterKey={"customer"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Thành phố</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.city}
-                        filterKey={"city"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 group">
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Bang</span>
-                      <PopoverLocal
-                        optionArray={filterOptions.state}
-                        filterKey={"state"}
-                        filterSelection={filterSelection}
-                        setFilterSelection={setFilterSelection}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Số lượng</span>
-                      <div className="flex flex-col">
-                        <svg 
-                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                            sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'ascending' 
-                              ? 'text-blue-500 transform -translate-y-0.5' 
-                              : 'group-hover:text-blue-500'
-                          }`} 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                        </svg>
-                        <svg 
-                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                            sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'descending' 
-                              ? 'text-blue-500 transform translate-y-0.5' 
-                              : 'group-hover:text-blue-500'
-                          }`} 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 border-r border-gray-200 text-center">
-                    <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
-                      <span className="group-hover:text-blue-600 transition-colors duration-200">Tổng doanh thu</span>
-                      <div className="flex flex-col">
-                        <svg 
-                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                            sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'ascending' 
-                              ? 'text-blue-500 transform -translate-y-0.5' 
-                              : 'group-hover:text-blue-500'
-                          }`} 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                        </svg>
-                        <svg 
-                          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                            sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'descending' 
-                              ? 'text-blue-500 transform translate-y-0.5' 
-                              : 'group-hover:text-blue-500'
-                          }`} 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 text-center">Số lượng bản ghi</TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeaderComponent 
+                filterOptions={filterOptions}
+                filterSelection={filterSelection}
+                setFilterSelection={setFilterSelection}
+                handleSort={handleSort}
+                sortConfig={sortConfig}
+              />
               {paginatedData && paginatedData.length > 0 && totalQuantity && totalRevenue ? (
                 <TableBody>
-                  {/* Summary Row */}
-                  <TableRow className="bg-gradient-to-r from-blue-50 to-blue-100 font-semibold sticky top-[48px] bg-white/95 backdrop-blur-sm z-10">
-                    <TableCell colSpan={7} className="text-center py-4 border-r border-blue-200">Tổng cộng:</TableCell>
-                    <TableCell className="font-medium py-4 border-r border-blue-200 bg-blue-50/50 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-blue-700">{totalQuantity.toLocaleString()}</span>
-                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium py-4 border-r border-blue-200 bg-green-50/50 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-green-700">{totalRevenue.toLocaleString('vi-VN')} VND</span>
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium py-4 text-center">{paginatedData.length.toLocaleString()}</TableCell>
-                  </TableRow>
-                  
-                  {/* Data Rows */}
+                  <SummaryRowComponent 
+                    totalQuantity={totalQuantity}
+                    totalRevenue={totalRevenue}
+                    paginatedData={paginatedData}
+                  />
                   {paginatedData.map((invoice, index) => (
-                    <TableRow 
-                      key={index} 
-                      className="hover:bg-gray-50/80 transition-all duration-300 border-b border-gray-100"
-                    >
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Time].[Year].[Year].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[Customer Id].[Customer Id].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[City Id].[City Id].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center">{invoice["[Dim Customer].[State].[State].[MEMBER_CAPTION]"]}</TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center font-medium group">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-blue-600 group-hover:text-blue-700 transition-colors duration-200">
-                            {invoice["[Measures].[Quantity]"].toLocaleString()}
-                          </span>
-                          <svg className="w-4 h-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                          </svg>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 border-r border-gray-100 text-center font-medium group">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-green-600 group-hover:text-green-700 transition-colors duration-200">
-                            {invoice["[Measures].[Total Revenue]"].toLocaleString('vi-VN')} VND
-                          </span>
-                          <svg className="w-4 h-4 text-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 text-center"></TableCell>
-                    </TableRow>
+                    <TableRowComponent key={index} invoice={invoice} />
                   ))}
                 </TableBody>
               ) : (
@@ -868,16 +1205,11 @@ export default function TableDWH() {
                     <TableCell colSpan={11} className="text-center py-12 text-gray-500">
                       {isLoading ? (
                         <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                          <span className="text-lg">Đang tải dữ liệu...</span>
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                          <span>Đang tải dữ liệu...</span>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <span className="text-lg">Không có dữ liệu để hiển thị</span>
-                        </div>
+                        <span>Không có dữ liệu để hiển thị</span>
                       )}
                     </TableCell>
                   </TableRow>
