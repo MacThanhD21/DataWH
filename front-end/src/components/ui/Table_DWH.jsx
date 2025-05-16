@@ -20,18 +20,18 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Pagination from "./Pagination";
 import { useDataFetching } from '@/hooks/useDataFetching';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 
 // Tách component TableHeader thành component riêng
-const TableHeaderComponent = memo(({ 
-  filterOptions, 
-  filterSelection, 
-  setFilterSelection, 
-  handleSort, 
-  sortConfig 
+const TableHeaderComponent = memo(({
+  filterOptions,
+  filterSelection,
+  setFilterSelection,
+  handleSort,
+  sortConfig
 }) => (
   <TableHeader className="sticky top-0 bg-white z-10">
     <TableRow>
@@ -116,26 +116,24 @@ const TableHeaderComponent = memo(({
         <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Quantity]")}>
           <span className="group-hover:text-blue-600 transition-colors duration-200">Số lượng</span>
           <div className="flex flex-col">
-            <svg 
-              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'ascending' 
-                  ? 'text-blue-500 transform -translate-y-0.5' 
+            <svg
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'ascending'
+                  ? 'text-blue-500 transform -translate-y-0.5'
                   : 'group-hover:text-blue-500'
-              }`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
+                }`}
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
             </svg>
-            <svg 
-              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'descending' 
-                  ? 'text-blue-500 transform translate-y-0.5' 
+            <svg
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${sortConfig.key === "[Measures].[Quantity]" && sortConfig.direction === 'descending'
+                  ? 'text-blue-500 transform translate-y-0.5'
                   : 'group-hover:text-blue-500'
-              }`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
+                }`}
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -147,26 +145,24 @@ const TableHeaderComponent = memo(({
         <div className="flex items-center justify-center gap-2 cursor-pointer group" onClick={() => handleSort("[Measures].[Total Revenue]")}>
           <span className="group-hover:text-blue-600 transition-colors duration-200">Tổng doanh thu</span>
           <div className="flex flex-col">
-            <svg 
-              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'ascending' 
-                  ? 'text-blue-500 transform -translate-y-0.5' 
+            <svg
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'ascending'
+                  ? 'text-blue-500 transform -translate-y-0.5'
                   : 'group-hover:text-blue-500'
-              }`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
+                }`}
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
             </svg>
-            <svg 
-              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${
-                sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'descending' 
-                  ? 'text-blue-500 transform translate-y-0.5' 
+            <svg
+              className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${sortConfig.key === "[Measures].[Total Revenue]" && sortConfig.direction === 'descending'
+                  ? 'text-blue-500 transform translate-y-0.5'
                   : 'group-hover:text-blue-500'
-              }`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
+                }`}
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -174,7 +170,7 @@ const TableHeaderComponent = memo(({
           </div>
         </div>
       </TableHead>
-      <TableHead className="font-semibold text-gray-700 py-4 text-center">Số lượng bản ghi</TableHead>
+      <TableHead className="font-semibold text-gray-700 py-4 text-center">Số lượng đơn hàng</TableHead>
     </TableRow>
   </TableHeader>
 ));
@@ -200,7 +196,7 @@ const TableRowComponent = memo(({ invoice }) => (
 ));
 
 // Tách component SummaryRow thành component riêng
-const SummaryRowComponent = memo(({ totalQuantity, totalRevenue, paginatedData }) => (
+const SummaryRowComponent = memo(({ totalQuantity, totalRevenue, paginatedData, displayData }) => (
   <TableRow className="bg-gray-50 font-semibold sticky top-[48px] z-10">
     <TableCell colSpan={7} className="text-center py-4 border-r border-gray-200">Tổng cộng:</TableCell>
     <TableCell className="py-4 border-r border-gray-200 text-center">
@@ -209,7 +205,7 @@ const SummaryRowComponent = memo(({ totalQuantity, totalRevenue, paginatedData }
     <TableCell className="py-4 border-r border-gray-200 text-center">
       {totalRevenue.toLocaleString('vi-VN')} VND
     </TableCell>
-    <TableCell className="py-4 text-center">{paginatedData.length.toLocaleString()}</TableCell>
+    <TableCell className="py-4 text-center">{displayData.length.toLocaleString()}</TableCell>
   </TableRow>
 ));
 
@@ -238,8 +234,8 @@ const DashboardComponent = memo(({ displayData }) => {
     }, {});
 
     return Object.values(monthlyData).sort((a, b) => {
-      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                     'July', 'August', 'September', 'October', 'November', 'December'];
+      const months = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
       return months.indexOf(a.month) - months.indexOf(b.month);
     });
   }, [displayData]);
@@ -276,6 +272,24 @@ const DashboardComponent = memo(({ displayData }) => {
         };
       }
       acc[state].value += item["[Measures].[Total Revenue]"];
+      return acc;
+    }, {});
+  }, [displayData]);
+
+  // Tính toán dữ liệu cho top 10 mặt hàng bán chạy
+  const topProductsData = useMemo(() => {
+    if (!displayData || displayData.length === 0) return [];
+    return displayData.reduce((acc, item) => {
+      const productId = item["[Dim Item].[Item Id].[Item Id].[MEMBER_CAPTION]"];
+      if (!acc[productId]) {
+        acc[productId] = {
+          name: productId,
+          quantity: 0,
+          revenue: 0
+        };
+      }
+      acc[productId].quantity += item["[Measures].[Quantity]"];
+      acc[productId].revenue += item["[Measures].[Total Revenue]"];
       return acc;
     }, {});
   }, [displayData]);
@@ -323,8 +337,9 @@ const DashboardComponent = memo(({ displayData }) => {
           color: "purple"
         },
         {
-          title: "Doanh thu trung bình",
-          value: displayData.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0) / displayData.length,
+          title: "Doanh thu trung bình/đơn",
+          value: displayData.reduce((acc, item) => acc + item["[Measures].[Total Revenue]"], 0) /
+            displayData.reduce((acc, item) => acc + item["[Measures].[Quantity]"], 0),
           format: "currency",
           color: "orange"
         }
@@ -347,6 +362,31 @@ const DashboardComponent = memo(({ displayData }) => {
       color: "#82ca9d"
     },
     {
+      title: "Top 20 mặt hàng bán chạy nhất",
+      type: "bar",
+      data: Object.values(topProductsData)
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 20)
+        .map(item => ({
+          name: item.name,
+          value: item.quantity,
+          revenue: item.revenue
+        })),
+      dataKey: "value",
+      name: "Số lượng",
+      color: "#FF8042",
+      tooltip: (data) => {
+        return (
+          <div className="bg-white p-2 border border-gray-200 rounded shadow">
+            <p className="font-semibold">{data.name}</p>
+            <p className="text-sm">Số lượng: {data.value.toLocaleString()}</p>
+            <p className="text-sm">Doanh thu: {data.revenue.toLocaleString('vi-VN')} VND</p>
+          </div>
+        );
+      }
+    },
+
+    {
       title: "Top 5 thành phố có doanh thu cao nhất",
       type: "pie",
       data: pieData,
@@ -362,14 +402,7 @@ const DashboardComponent = memo(({ displayData }) => {
       name: "Doanh thu",
       color: "#8884d8"
     },
-    {
-      title: "Top 10 khách hàng có doanh thu cao nhất",
-      type: "bar",
-      data: Object.values(customerData).sort((a, b) => b.value - a.value).slice(0, 10),
-      dataKey: "value",
-      name: "Doanh thu",
-      color: "#82ca9d"
-    },
+
     {
       title: "Phân bố doanh thu theo quý",
       type: "pie",
@@ -388,7 +421,14 @@ const DashboardComponent = memo(({ displayData }) => {
       name: "Doanh thu",
       color: COLORS
     },
-    // Thêm các biểu đồ khác ở đây...
+    {
+      title: "Top 10 khách hàng có doanh thu cao nhất",
+      type: "bar",
+      data: Object.values(customerData).sort((a, b) => b.value - a.value).slice(0, 10),
+      dataKey: "value",
+      name: "Doanh thu",
+      color: "#82ca9d"
+    },
   ];
 
   // Tính toán số trang
@@ -418,7 +458,7 @@ const DashboardComponent = memo(({ displayData }) => {
             <div key={index} className={`bg-${stat.color}-50 p-4 rounded-lg flex flex-col justify-center`}>
               <p className={`text-sm text-${stat.color}-600 mb-2`}>{stat.title}</p>
               <p className={`text-2xl font-bold text-${stat.color}-700`}>
-                {stat.format === "currency" 
+                {stat.format === "currency"
                   ? `${stat.value.toLocaleString('vi-VN')} VND`
                   : stat.value.toLocaleString()}
               </p>
@@ -476,7 +516,7 @@ const DashboardComponent = memo(({ displayData }) => {
                 <Cell key={`cell-${index}`} fill={chart.color[index % chart.color.length]} />
               ))}
             </Pie>
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, chart.name]}
             />
             <Legend />
@@ -534,9 +574,8 @@ const DashboardComponent = memo(({ displayData }) => {
             <button
               key={index}
               onClick={() => setCurrentPage(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                currentPage === index ? 'bg-blue-500' : 'bg-gray-300'
-              }`}
+              className={`w-2 h-2 rounded-full transition-colors ${currentPage === index ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
             />
           ))}
         </div>
@@ -602,7 +641,7 @@ export default function TableDWH() {
   // Memoize filtered data
   const filteredData = useMemo(() => {
     if (!cleanData) return [];
-    
+
     const dimensionMap = {
       month: "[Dim Time].[Month].[Month].[MEMBER_CAPTION]",
       quarter: "[Dim Time].[Quarter].[Quarter].[MEMBER_CAPTION]",
@@ -740,7 +779,7 @@ export default function TableDWH() {
     try {
       // Tạo workbook mới
       const wb = XLSX.utils.book_new();
-      
+
       // Chuẩn bị dữ liệu cho Excel
       const excelData = displayData.map(item => ({
         'Tháng': item["[Dim Time].[Month].[Month].[MEMBER_CAPTION]"],
@@ -772,15 +811,15 @@ export default function TableDWH() {
 
       // Định dạng cột
       const wscols = [
-        {wch: 10}, // Tháng
-        {wch: 10}, // Quý
-        {wch: 10}, // Năm
-        {wch: 15}, // Mã mặt hàng
-        {wch: 20}, // Khách hàng
-        {wch: 15}, // Thành phố
-        {wch: 15}, // Bang
-        {wch: 15}, // Số lượng
-        {wch: 20}  // Tổng doanh thu
+        { wch: 10 }, // Tháng
+        { wch: 10 }, // Quý
+        { wch: 10 }, // Năm
+        { wch: 15 }, // Mã mặt hàng
+        { wch: 20 }, // Khách hàng
+        { wch: 15 }, // Thành phố
+        { wch: 15 }, // Bang
+        { wch: 15 }, // Số lượng
+        { wch: 20 }  // Tổng doanh thu
       ];
       ws['!cols'] = wscols;
 
@@ -863,8 +902,8 @@ export default function TableDWH() {
       }, {});
 
       const monthlyData = Object.values(chartData).sort((a, b) => {
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+        const months = ['January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'];
         return months.indexOf(a.month) - months.indexOf(b.month);
       });
 
@@ -911,7 +950,7 @@ export default function TableDWH() {
           ['Tổng doanh thu', totalRevenue.toLocaleString('vi-VN') + ' VND'],
           ['Tổng số lượng', totalQuantity.toLocaleString()],
           ['Số lượng đơn hàng', displayData.length.toLocaleString()],
-          ['Doanh thu trung bình', avgRevenue.toLocaleString('vi-VN') + ' VND']
+          ['Doanh thu trung bình/đơn', avgRevenue.toLocaleString('vi-VN') + ' VND']
         ],
         theme: 'grid',
         styles: {
@@ -1008,7 +1047,7 @@ export default function TableDWH() {
           halign: 'right',
           fontSize: 9
         },
-        didDrawPage: function(data) {
+        didDrawPage: function (data) {
           // Thêm footer cho mỗi trang
           doc.setFontSize(8);
           doc.setTextColor(100, 100, 100);
@@ -1049,7 +1088,7 @@ export default function TableDWH() {
       console.error("Lỗi chi tiết khi xuất PDF:", error);
       if (error.message) console.error("Error message:", error.message);
       if (error.stack) console.error("Error stack:", error.stack);
-      
+
       toast.error("Xuất PDF thất bại!", {
         description: "Vui lòng thử lại hoặc liên hệ hỗ trợ",
         duration: 3000,
@@ -1059,9 +1098,9 @@ export default function TableDWH() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen p-6 space-y-6 bg-white">
-      {/* Control Panel */}
-      <Card className="p-6 bg-white">
+    <div className="flex flex-col min-h-screen p-6 space-y-6 bg-white pt-24">
+      {/* Control Panel - Fixed on top */}
+      <Card className="p-6 bg-white sticky top-16 z-40 shadow-md">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -1181,7 +1220,7 @@ export default function TableDWH() {
         <div className="h-full flex flex-col">
           <div className="overflow-auto flex-1">
             <Table className="min-w-[1024px]">
-              <TableHeaderComponent 
+              <TableHeaderComponent
                 filterOptions={filterOptions}
                 filterSelection={filterSelection}
                 setFilterSelection={setFilterSelection}
@@ -1190,10 +1229,11 @@ export default function TableDWH() {
               />
               {paginatedData && paginatedData.length > 0 && totalQuantity && totalRevenue ? (
                 <TableBody>
-                  <SummaryRowComponent 
+                  <SummaryRowComponent
                     totalQuantity={totalQuantity}
                     totalRevenue={totalRevenue}
                     paginatedData={paginatedData}
+                    displayData={displayData}
                   />
                   {paginatedData.map((invoice, index) => (
                     <TableRowComponent key={index} invoice={invoice} />
@@ -1217,7 +1257,7 @@ export default function TableDWH() {
               )}
             </Table>
           </div>
-          
+
           {/* Pagination */}
           {displayData && displayData.length > 0 && (
             <Pagination

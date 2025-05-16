@@ -92,10 +92,10 @@ def generate_fact_sale(n, customer_df, item_df, time_df):
     
     return pd.DataFrame(data)
 
-num_cities = 20
-num_customers = 100
-num_items = 50
-num_fact_records = 1000
+num_cities = 25
+num_customers = 500
+num_items = 150
+num_fact_records = 2000
 
 
 # Generate dimension data
